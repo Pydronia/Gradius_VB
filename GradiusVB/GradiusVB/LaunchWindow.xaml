@@ -1,0 +1,21 @@
+﻿<Window x:Class="LaunchWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	Title="Gradius: VB"
+	ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight"
+	Background="Black" Foreground="White">
+	<Grid HorizontalAlignment="Left" VerticalAlignment="Top" ShowGridLines="True" Width="672" Height="480">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="1*"/>
+			<ColumnDefinition Width="2*"/>
+			<ColumnDefinition Width="1*"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="2*"/>
+			<RowDefinition Height="1*"/>
+			<RowDefinition Height="1*"/>
+			<RowDefinition Height="1*"/>
+		</Grid.RowDefinitions>
+		<Image Name="Title" HorizontalAlignment="Center" VerticalAlignment="Center" Source="/Images/Title_Logo.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Grid.ColumnSpan="3" />
+	</Grid>
+</Window>
