@@ -1,0 +1,59 @@
+﻿<Window x:Class="GameWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	Title="Gradius: VB"
+	ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight"
+	Background="Black" Foreground="White"
+	UseLayoutRounding="True" Icon="/Images/Icon.ico">
+	<Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="672" Height="480">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition/>
+			<RowDefinition Height="64"/>
+		</Grid.RowDefinitions>
+
+		<Border BorderThickness="10,0" HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="#FF2054FC">
+			<Canvas Width="512" Height="416" Background="Gray" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0">
+				<TextBlock Style="{StaticResource ArcadeText}">GAMEPLAY</TextBlock>
+			</Canvas>
+		</Border>
+		
+		<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,8,0,0">
+			<StackPanel.Resources>
+				<Style TargetType="Image">
+					<Setter Property="Margin" Value="2,0,0,0"/>
+					<Setter Property="RenderOptions.BitmapScalingMode" Value="NearestNeighbor"/>
+				</Style>
+			</StackPanel.Resources>
+			<Image Name="pm_Speed" Source="/Images/PM_Speed.png" Width="62"/>
+			<Image Name="pm_Missile" Source="/Images/PM_Missile.png" Width="62"/>
+			<Image Name="pm_Double" Source="/Images/PM_Double.png" Width="62"/>
+			<Image Name="pm_Laser" Source="/Images/PM_Laser.png" Width="62"/>
+			<Image Name="pm_Option" Source="/Images/PM_Option.png" Width="62"/>
+			<Image Name="pm_Shield" Source="/Images/PM_Shield.png" Width="62" />
+		</StackPanel>
+		
+		<StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,12">
+			<StackPanel.Resources>
+				<Style TargetType="Image">
+					<Setter Property="RenderOptions.BitmapScalingMode" Value="NearestNeighbor"/>
+				</Style>
+				<Style TargetType="TextBlock">
+					<Setter Property="RenderOptions.BitmapScalingMode" Value="NearestNeighbor"/>
+					<Setter Property="FontFamily" Value="/Font/#Arcade"/>
+					<Setter Property="FontSize" Value="16"/>
+				</Style>
+			</StackPanel.Resources>
+			<Image Name="imgLives" Source="/Images/Lives.png" Width="16"/>
+			<TextBlock Name="lblLives" Width="32" TextAlignment="Right">00</TextBlock>
+			<TextBlock Name="lblName" Margin="20,0,0,0">XXX</TextBlock>
+			<TextBlock Margin="20,0,0,0">SCORE:</TextBlock>
+			<TextBlock Name="lblScore" Margin="4,0,0,0">0000000</TextBlock>
+			<TextBlock Margin="16,0,0,0">HI:</TextBlock>
+			<TextBlock Name="lblHi" Margin="4,0,0,0">0000000</TextBlock>
+		</StackPanel>
+		
+	</Grid>
+</Window>

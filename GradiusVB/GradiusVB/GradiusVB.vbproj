@@ -85,9 +85,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="GameWindow.xaml.vb">
+      <DependentUpon>GameWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="HelpWindow.xaml.vb">
       <DependentUpon>HelpWindow.xaml</DependentUpon>
     </Compile>
+    <Page Include="GameWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="LaunchWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -125,6 +132,7 @@
     <Import Include="System.Windows.Navigation" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HighScoreManager.vb" />
     <Compile Include="My Project\AssemblyInfo.vb">
       <SubType>Code</SubType>
     </Compile>
@@ -181,6 +189,17 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\PM_Double.png" />
+    <Resource Include="Images\PM_Laser.png" />
+    <Resource Include="Images\PM_Missile.png" />
+    <Resource Include="Images\PM_Option.png" />
+    <Resource Include="Images\PM_Shield.png" />
+    <Resource Include="Images\PM_Speed.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Lives.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

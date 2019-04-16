@@ -97,7 +97,10 @@
 	Private Sub startGame()
 		Dim gm As GameManager
 		gm = New GameManager(initialInput.Text, soundSetting)
-		' TODO: open new window. close current window, pass gm through
+		Dim gw As GameWindow
+		gw = New GameWindow(gm)
+		gw.Show()
+		Me.Close()
 	End Sub
 
 End Class

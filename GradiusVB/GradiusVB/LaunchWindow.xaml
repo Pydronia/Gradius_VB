@@ -5,7 +5,7 @@
 	ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight"
 	Background="Black" Foreground="White"
 	UseLayoutRounding="True" Icon="/Images/Icon.ico">
-	<Grid HorizontalAlignment="Left" VerticalAlignment="Top" Width="672" Height="480">
+	<Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="672" Height="480">
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition Width="1*"/>
 			<ColumnDefinition Width="2*"/>
