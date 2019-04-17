@@ -33,11 +33,19 @@
 		Return highScore
 	End Function
 
+	' dummy/stub function!
+	Public Function getDummyScore() As Integer
+		Return 1337008
+	End Function
+
+	Public Function getSoundSetting() As Boolean
+		Return soundSetting
+	End Function
+
 #End Region
 
 	Private Sub setup()
 		lives = 3
-
 		highScore = HighScoreManager.getHighScore()
 	End Sub
 

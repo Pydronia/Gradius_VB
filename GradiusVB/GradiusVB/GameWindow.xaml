@@ -53,6 +53,7 @@
 			<TextBlock Name="lblScore" Margin="4,0,0,0">0000000</TextBlock>
 			<TextBlock Margin="16,0,0,0">HI:</TextBlock>
 			<TextBlock Name="lblHi" Margin="4,0,0,0">0000000</TextBlock>
+			<Button Name="btnTst">TST</Button>
 		</StackPanel>
 		
 	</Grid>

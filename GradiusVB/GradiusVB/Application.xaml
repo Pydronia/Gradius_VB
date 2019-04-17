@@ -52,6 +52,7 @@
 			<Setter Property="VerticalContentAlignment" Value="Center"/>
 			<Setter Property="FontFamily" Value="/Font/#Arcade"/>
 			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="Cursor" Value="Hand"/>
 			<Setter Property="Template">
 				<Setter.Value>
 					<ControlTemplate TargetType="Button">
@@ -78,6 +79,7 @@
 			<Setter Property="VerticalContentAlignment" Value="Center"/>
 			<Setter Property="FontFamily" Value="/Font/#Arcade"/>
 			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="Cursor" Value="Hand"/>
 			<Setter Property="Template">
 				<Setter.Value>
 					<ControlTemplate TargetType="Button">
