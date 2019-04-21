@@ -15,8 +15,12 @@
 		</Grid.RowDefinitions>
 
 		<Border BorderThickness="10,0" HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="#FF2054FC">
-			<Canvas Width="512" Height="416" Background="Gray" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0">
-				<TextBlock Style="{StaticResource ArcadeText}">GAMEPLAY</TextBlock>
+			<Canvas Name="gameField" Width="512" Height="416" Background="Black" VerticalAlignment="Center" HorizontalAlignment="Center" ClipToBounds="True">
+				<Canvas.Resources>
+					<Style TargetType="Image">
+						<Setter Property="RenderOptions.BitmapScalingMode" Value="NearestNeighbor"/>
+					</Style>
+				</Canvas.Resources>
 			</Canvas>
 		</Border>
 		

@@ -208,5 +208,15 @@
   <ItemGroup>
     <Resource Include="Images\Lives.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\vicViper.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\vicViper_Down.png" />
+    <Resource Include="Images\vicViper_Up.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\map.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>
