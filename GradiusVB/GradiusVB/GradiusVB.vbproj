@@ -161,6 +161,7 @@
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.vb</LastGenOutput>
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <Resource Include="Font\Arcade-Regular.otf" />
     <None Include="My Project\Settings.settings">
@@ -217,6 +218,15 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\map.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\collisionMap.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\vicViper_Death_0.png" />
+    <Resource Include="Images\vicViper_Death_1.png" />
+    <Resource Include="Images\vicViper_Death_2.png" />
+    <Resource Include="Images\vicViper_Death_3.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

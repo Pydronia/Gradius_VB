@@ -15,7 +15,7 @@
 		</Grid.RowDefinitions>
 
 		<Border BorderThickness="10,0" HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="#FF2054FC">
-			<Canvas Name="gameField" Width="512" Height="416" Background="Black" VerticalAlignment="Center" HorizontalAlignment="Center" ClipToBounds="True">
+			<Canvas Name="gameField" Width="512" Height="416" Background="Black" VerticalAlignment="Center" HorizontalAlignment="Center" ClipToBounds="True" Cursor="None">
 				<Canvas.Resources>
 					<Style TargetType="Image">
 						<Setter Property="RenderOptions.BitmapScalingMode" Value="NearestNeighbor"/>
