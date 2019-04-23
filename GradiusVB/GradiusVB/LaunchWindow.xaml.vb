@@ -2,7 +2,7 @@
 
 	Public soundSetting As Boolean
 	Public initials As String
-	Dim timer As System.Windows.Threading.DispatcherTimer
+	Private timer As System.Windows.Threading.DispatcherTimer
 
 #Region "EventHandlers"
 

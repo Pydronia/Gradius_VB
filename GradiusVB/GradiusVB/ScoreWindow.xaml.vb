@@ -11,12 +11,12 @@
 	Private Sub Window_Loaded(sender As System.Object, e As System.Windows.RoutedEventArgs) Handles MyBase.Loaded
 		Dim highScores As HighScore()
 		highScores = HighScoreManager.fetchHighScores()
-		If gm.getDummyScore() > highScores(0).score Then
+		If gm.getScore() > highScores(0).score Then
 			lblHiGet.Visibility = Windows.Visibility.Visible
 		End If
 
 		Array.Resize(highScores, highScores.Length + 1)
-		highScores(highScores.Length - 1) = New HighScore(gm.getDummyScore(), gm.getName())
+		highScores(highScores.Length - 1) = New HighScore(gm.getScore(), gm.getName())
 		HighScoreManager.sortHighScores(highScores)
 
 		displayHighScores(highScores)

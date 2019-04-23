@@ -21,10 +21,13 @@
 #Region "KeyInputHandlers"
 
 	Private Sub Window_KeyDown(sender As System.Object, e As System.Windows.Input.KeyEventArgs) Handles MyBase.KeyDown
-		If Not e.IsRepeat And (e.Key = Key.Up Or e.Key = Key.Down Or e.Key = Key.Left Or e.Key = Key.Right) Then
-			gm.setInputDirection(True, e.Key)
+		If Not e.IsRepeat Then
+			If (e.Key = Key.Up Or e.Key = Key.Down Or e.Key = Key.Left Or e.Key = Key.Right) Then
+				gm.setInputDirection(True, e.Key)
+			ElseIf e.Key = Key.A Then
+				gm.prepareToShoot()
+			End If
 		End If
-
 	End Sub
 
 	Private Sub Window_KeyUp(sender As System.Object, e As System.Windows.Input.KeyEventArgs) Handles MyBase.KeyUp
