@@ -5,6 +5,7 @@ Public Enum SoundEffects
 	Intro
 	Volcano
 	Shoot
+	Kill
 End Enum
 
 ' Class to manage the playing of sound effects and background sounds.
@@ -32,6 +33,8 @@ Public Class SoundManager
 				playSound(backgroundPlayer, effect)
 			Case SoundEffects.Shoot
 				playSound(bulletPlayer, effect)
+			Case SoundEffects.Kill
+				playSound(enemyPlayer, effect)
 		End Select
 	End Sub
 
@@ -49,6 +52,8 @@ Public Class SoundManager
 				uri = New Uri("Sounds/volcano.mp3", UriKind.Relative)
 			Case SoundEffects.Shoot
 				uri = New Uri("Sounds/shoot.wav", UriKind.Relative)
+			Case SoundEffects.Kill
+				uri = New Uri("Sounds/kill.wav", UriKind.Relative)
 		End Select
 		player.Open(uri)
 
@@ -86,17 +91,18 @@ End Enum
 ' Class for storing the representation of maps and terrain
 Public Class Map
 
-	Const mapMoveSpeed As Integer = 64
+	Const mapMoveSpeed As Integer = 640
 
 	Public control As Image
 
 	Public collisionMap As Boolean(,)
+	Public enemyMap As Entity(,)
 
 	Public length As Integer
 	Public position As Double
 	Public movementSpeed As Double
 
-	Public Sub New(ByVal control As Image, ByVal collisionImage As BitmapImage)
+	Public Sub New(ByVal control As Image, ByVal collisionImage As BitmapImage, ByVal enemyMapImage As BitmapImage)
 		Me.control = control
 		Me.length = control.Width
 		Me.position = 0
@@ -104,19 +110,16 @@ Public Class Map
 
 		Canvas.SetZIndex(Me.control, 2)
 
-		' generating collision array
-		' pixel data generation
-		Dim stride As Integer = collisionImage.PixelWidth * collisionImage.Format.BitsPerPixel / 8
-		Dim pixelArray((collisionImage.PixelHeight * stride) - 1) As Byte
-		collisionImage.CopyPixels(pixelArray, stride, 0)
+		' collisionmap generation
+		Dim collisionPixelArray As Byte()
+		collisionPixelArray = GameManager.getPixelData(collisionImage)
 
 		collisionMap = New Boolean(collisionImage.PixelHeight - 1, collisionImage.PixelWidth - 1) {}
 
-		' collisionmap generation (boolean array)
 		Dim counter As Integer = 0
 		For i = 0 To collisionImage.PixelHeight - 1
 			For j = 0 To collisionImage.PixelWidth - 1
-				If CInt(pixelArray(counter)) > 0 Then
+				If CInt(collisionPixelArray(counter)) > 0 Then
 					collisionMap(i, j) = False
 				Else
 					collisionMap(i, j) = True
@@ -124,6 +127,9 @@ Public Class Map
 				counter = counter + 4
 			Next j
 		Next i
+
+		' enemyMap generation
+		enemyMap = GameManager.generateEnemyMap(GameManager.getPixelData(enemyMapImage), New Size(enemyMapImage.PixelWidth, enemyMapImage.PixelHeight))
 
 	End Sub
 
@@ -153,9 +159,13 @@ Public Class Entity
 	Public deathAnimationDelayStart As DateTime
 
 	Public shallShoot As Boolean = False
+	Public shallChirp As Boolean = False
 	Public currentBullets(-1) As Entity
 
 	Public shallDestroy As Boolean = False
+	Public shallSpawn As Boolean = False
+
+	Public value As Integer
 
 	Public type As String
 	Public control As Image
@@ -165,7 +175,7 @@ Public Class Entity
 		Me.control = control
 		Me.position = position
 		Me.movementSpeed = movementSpeed
-		Me.deathAnimationDelay = 150
+		Me.deathAnimationDelay = 64
 		Me.deathFrameNum = -1
 		Me.hitBox = New Rect(position.X, position.Y, control.Width, control.Height)
 
@@ -183,8 +193,6 @@ Public Class Entity
 	Public Sub ui_updatePosition()
 		Canvas.SetLeft(control, position.X)
 		Canvas.SetTop(control, position.Y)
-		hitBox.X = position.X
-		hitBox.Y = position.Y
 	End Sub
 
 	Public Sub ui_updateFrame()
@@ -193,6 +201,8 @@ Public Class Entity
 				control.Source = Nothing
 			Else
 				control.Source = deathAnimationFrames(deathFrameNum)
+				control.Width = deathAnimationFrames(deathFrameNum).PixelWidth * GameManager.scaleFactor
+				control.Height = deathAnimationFrames(deathFrameNum).PixelHeight * GameManager.scaleFactor
 			End If
 		Else
 			control.Source = animationFrames(currentAnimationFrame)
@@ -212,14 +222,8 @@ Public Class Entity
 			currentBullets(i).ui_updatePosition()
 		Next i
 
-		For i = 0 To toDestroy.Length - 1
-			Dim newArray(currentBullets.Length - 2) As Entity
-			If newArray.Length <> 0 Then
-				Array.Copy(currentBullets, 0, newArray, 0, toDestroy(i))
-				Array.Copy(currentBullets, toDestroy(i) + 1, newArray, toDestroy(i), currentBullets.Length - 1 - toDestroy(i))
-			End If
-			currentBullets = newArray
-		Next i
+		GameManager.removeFromArray(currentBullets, toDestroy)
+
 	End Sub
 
 	Public Overridable Sub moveEntity(ByVal delta As TimeSpan)
@@ -227,6 +231,8 @@ Public Class Entity
 		Dim newPosition As Point
 		newPosition = Vector.Add(movementDirection * distance, position)
 		position = newPosition
+		hitBox.X = position.X
+		hitBox.Y = position.Y
 
 		If position.X > GameManager.gameWidth * GameManager.scaleFactor Or position.X < 0 Or position.Y > GameManager.gameHeight * GameManager.scaleFactor Or position.Y < 0 Then
 			shallDestroy = True
@@ -235,6 +241,39 @@ Public Class Entity
 
 	Public Overridable Sub generateBullet(ByRef gw As GameWindow, ByRef sm As SoundManager)
 
+	End Sub
+
+End Class
+
+Public Class Enemy_Fan
+	Inherits Entity
+
+	Public Const animationCycleTime As Integer = 200
+	Public lastFrame As DateTime
+
+	Sub New(ByVal position As Point)
+		MyBase.New("fan", GameManager.makeNewSprite("/Images/fan_1.png"), position, 256)
+		movementDirection = New Vector(-1, 0)
+
+		animationFrames = New BitmapImage(2) {GameManager.makeNewBitmapImage("/Images/fan_1.png"), GameManager.makeNewBitmapImage("/Images/fan_2.png"), GameManager.makeNewBitmapImage("/Images/fan_3.png")}
+		deathAnimationFrames = New BitmapImage(2) {GameManager.makeNewBitmapImage("/Images/fan_death_1.png"), GameManager.makeNewBitmapImage("/Images/fan_death_2.png"), GameManager.makeNewBitmapImage("/Images/fan_death_3.png")}
+
+		value = 100
+
+		lastFrame = DateTime.Now
+	End Sub
+
+	Public Overrides Sub moveEntity(ByVal delta As TimeSpan)
+		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
+		Dim newPosition As Point
+		newPosition = Vector.Add(movementDirection * distance, position)
+		position = newPosition
+		hitBox.X = position.X
+		hitBox.Y = position.Y
+
+		If position.X > GameManager.gameWidth * GameManager.scaleFactor + GameManager.enemyBufferZone Or position.X < -GameManager.enemyBufferZone Or position.Y > GameManager.gameHeight * GameManager.scaleFactor + GameManager.enemyBufferZone Or position.Y < -GameManager.enemyBufferZone Then
+			shallDestroy = True
+		End If
 	End Sub
 
 End Class
@@ -290,6 +329,8 @@ Public Class VicViper
 		End If
 
 		position = newPosition
+		hitBox.X = position.X
+		hitBox.Y = position.Y
 	End Sub
 
 	Public Overrides Sub generateBullet(ByRef gw As GameWindow, ByRef sm As SoundManager)
@@ -321,13 +362,16 @@ Public Class GameManager
 	Public Shared scaleFactor As Integer = 2
 	Public Shared gameWidth As Integer = 256
 	Public Shared gameHeight As Integer = 208
+	Public Shared enemyBufferZone As Integer = 64
 
 	Const vicAnimationDelay As Integer = 100
 	Const gameOverDelay As Integer = 2500
 
+
 	Public vicViper As VicViper
 
 	Public map As Map
+	Private previousEnemyCheckPosition As Double
 
 	Private sm As SoundManager
 
@@ -345,6 +389,8 @@ Public Class GameManager
 	Private shallEndGame As Boolean = False
 	Private gameOver As Boolean = False
 	Private gameOverDelayStart As DateTime
+
+	Private currentEnemies(-1) As Entity
 
 
 #End Region
@@ -376,11 +422,6 @@ Public Class GameManager
 
 	Public Function getHighScore() As Integer
 		Return highScore
-	End Function
-
-	' dummy/stub function!
-	Public Function getDummyScore() As Integer
-		Return 1337008
 	End Function
 
 	Public Function getSoundSetting() As Boolean
@@ -419,6 +460,7 @@ Public Class GameManager
 	' setup before game window created
 	Private Sub preSetup()
 		lives = 3
+		score = 0
 		highScore = HighScoreManager.getHighScore()
 		sm = New SoundManager(Me)
 	End Sub
@@ -431,10 +473,11 @@ Public Class GameManager
 		vicViper.ui_updatePosition()
 		gw.gameField.Children.Add(vicViper.control)
 
-		map = New Map(makeNewSprite("/Images/map.png"), makeNewBitmapImage("/Images/collisionMap.png"))
+		map = New Map(makeNewSprite("/Images/map.png"), makeNewBitmapImage("/Images/collisionMap.png"), makeNewBitmapImage("/Images/enemy_map.png"))
 		map.ui_updateMapPosition()
 		gw.gameField.Children.Add(map.control)
 
+		previousEnemyCheckPosition = -map.position + (gameWidth * scaleFactor) + enemyBufferZone
 	End Sub
 
 	' start the game loop!
@@ -448,6 +491,13 @@ Public Class GameManager
 
 	' Reset for when you loose a life
 	Private Sub reset()
+
+		For i = 0 To currentEnemies.Length - 1
+			gw.gameField.Children.Remove(currentEnemies(i).control)
+		Next i
+
+		ReDim currentEnemies(-1)
+
 		Canvas.SetZIndex(vicViper.control, 0)
 		shallReset = False
 
@@ -501,18 +551,27 @@ Public Class GameManager
 	' Check the collisions for the vicviper/entities
 	Private Function checkCollisions()
 
-		' vic viper checking
+		' vic viper bullets checking
 		For i = 0 To vicViper.currentBullets.Length - 1
 			If checkTerrain(vicViper.currentBullets(i)) Then
 				vicViper.currentBullets(i).shallDestroy = True
+			Else
+				Dim enemy As Entity = checkHitsForBullet(vicViper.currentBullets(i))
+				If enemy IsNot Nothing Then
+					score = score + enemy.value
+					vicViper.currentBullets(i).shallDestroy = True
+					enemy.isDying = True
+					enemy.shallChirp = True
+				End If
 			End If
 		Next i
 
+		' vicViper checking
 		Dim hasDied As Boolean
 		hasDied = False
 		If Not vicViper.isDying Then
 			checkBoundaries()
-			hasDied = checkTerrain(vicViper)
+			hasDied = checkTerrain(vicViper) Or checkEnemyCollision()
 		End If
 		Return hasDied
 	End Function
@@ -555,12 +614,40 @@ Public Class GameManager
 		Return collided
 	End Function
 
+	Private Function checkHitsForBullet(ByRef bullet As Entity) As Entity
+		Dim hitEnemy As Entity
+		hitEnemy = Nothing
+		For i = 0 To currentEnemies.Length - 1
+			If bullet.hitBox.IntersectsWith(currentEnemies(i).hitBox) And Not currentEnemies(i).isDying Then
+				hitEnemy = currentEnemies(i)
+			End If
+		Next i
+		Return hitEnemy
+	End Function
+
+	Private Function checkEnemyCollision() As Boolean
+		Dim hit As Boolean = False
+		For i = 0 To currentEnemies.Length - 1
+			If currentEnemies(i).hitBox.IntersectsWith(vicViper.hitBox) Then
+				hit = True
+			End If
+		Next i
+		Return hit
+	End Function
+
 	' move the specified entity and update vicViper animation frame if applicable
 	Private Sub moveEntity(ByVal entity As Entity, ByVal delta As TimeSpan)
 		entity.moveEntity(delta)
 	End Sub
 
 	Private Sub moveEntities(ByVal delta As TimeSpan)
+
+		For i = 0 To currentEnemies.Length - 1
+			If Not currentEnemies(i).isDying Then
+				currentEnemies(i).moveEntity(delta)
+			End If
+		Next i
+
 		For i = 0 To vicViper.currentBullets.Length - 1
 			vicViper.currentBullets(i).moveEntity(delta)
 		Next i
@@ -572,6 +659,32 @@ Public Class GameManager
 		If map.position <= (-map.length + (gameWidth * scaleFactor)) Then
 			map.position = 0
 		End If
+
+		' enemy spawning
+		Dim currentEnemyCheckPosition As Double
+		currentEnemyCheckPosition = -map.position + (gameWidth * scaleFactor) + enemyBufferZone
+
+		Dim startPos As Integer
+		startPos = CInt(Int(previousEnemyCheckPosition / (2 * scaleFactor))) Mod map.enemyMap.GetLength(1)
+		Dim endPos As Integer
+		endPos = CInt(Int(currentEnemyCheckPosition / (2 * scaleFactor))) Mod map.enemyMap.GetLength(1)
+
+		Console.WriteLine(CStr(startPos) & " " & CStr(endPos))
+
+		If endPos - startPos > 0 Then
+			' check columns for startPos + 1 -> endPos inclusive
+			For i = startPos + 1 To endPos
+				For j = 0 To map.enemyMap.GetLength(0) - 1
+					If map.enemyMap(j, i) IsNot Nothing Then
+						prepareEnemy(map.enemyMap(j, i))
+					End If
+				Next j
+			Next i
+
+		End If
+
+		previousEnemyCheckPosition = currentEnemyCheckPosition
+
 	End Sub
 
 	' update and check events which happen on a timed basis
@@ -595,6 +708,30 @@ Public Class GameManager
 				shallEndGame = True
 			End If
 		End If
+
+		For i = 0 To currentEnemies.Length - 1
+			If currentEnemies(i).type = "fan" Then
+				Dim currentFan As Enemy_Fan
+				currentFan = DirectCast(currentEnemies(i), Enemy_Fan)
+
+				If Not currentFan.isDying Then
+					' regular animation
+					If (DateTime.Now - currentFan.lastFrame).TotalMilliseconds >= Enemy_Fan.animationCycleTime Then
+						currentFan.currentAnimationFrame = (CInt(currentFan.currentAnimationFrame) + 1) Mod 3
+						currentFan.lastFrame = DateTime.Now
+					End If
+				Else
+					If (DateTime.Now - currentFan.deathAnimationDelayInterval).TotalMilliseconds >= currentFan.deathAnimationDelay Then
+						If currentFan.deathFrameNum >= currentFan.deathAnimationFrames.Length Then
+							currentFan.shallDestroy = True
+						End If
+						currentFan.deathAnimationDelayInterval = DateTime.Now
+						currentFan.deathFrameNum = currentFan.deathFrameNum + 1
+					End If
+				End If
+			End If
+		Next i
+
 	End Sub
 
 	' update the animation frame of the vic viper
@@ -674,6 +811,28 @@ Public Class GameManager
 #Region "UI Update Routines"
 	' updates all the UI elements
 	Private Sub updateUI()
+
+		' enemies
+		Dim enemiesToDestroy(-1) As Integer
+		For i = 0 To currentEnemies.Length - 1
+			If currentEnemies(i).shallSpawn Then
+				gw.gameField.Children.Add(currentEnemies(i).control)
+				currentEnemies(i).shallSpawn = False
+			ElseIf currentEnemies(i).shallDestroy Then
+				Array.Resize(enemiesToDestroy, enemiesToDestroy.Length + 1)
+				enemiesToDestroy(enemiesToDestroy.Length - 1) = i
+				gw.gameField.Children.Remove(currentEnemies(i).control)
+			ElseIf currentEnemies(i).shallChirp Then
+				sm.playSoundEffect(SoundEffects.Kill)
+				currentEnemies(i).shallChirp = False
+			End If
+			currentEnemies(i).ui_updatePosition()
+			currentEnemies(i).ui_updateFrame()
+		Next i
+
+		removeFromArray(currentEnemies, enemiesToDestroy)
+
+		' vic Viper
 		If vicViper.shallShoot Then
 			vicViper.generateBullet(gw, sm)
 			vicViper.shallShoot = False
@@ -700,6 +859,8 @@ Public Class GameManager
 		Else
 			gw.lblLives.Visibility = Visibility.Hidden
 		End If
+		gw.lblScore.Text = getScore().ToString("D7")
+
 	End Sub
 
 	' updates which BGM to use
@@ -713,6 +874,24 @@ Public Class GameManager
 #End Region
 
 #Region "Other routines"
+
+	Private Sub prepareEnemy(ByVal enemy As Entity)
+		Array.Resize(currentEnemies, currentEnemies.Length + 1)
+		enemy.shallSpawn = True
+		currentEnemies(currentEnemies.Length - 1) = enemy
+	End Sub
+
+	Public Shared Sub removeFromArray(ByRef array As Array, ByVal indexesToRemove As Integer())
+		System.Array.Reverse(indexesToRemove)
+		For i = 0 To indexesToRemove.Length - 1
+			Dim newArray(array.Length - 2) As Entity
+			If newArray.Length <> 0 Then
+				array.Copy(array, 0, newArray, 0, indexesToRemove(i))
+				array.Copy(array, indexesToRemove(i) + 1, newArray, indexesToRemove(i), array.Length - 1 - indexesToRemove(i))
+			End If
+			array = newArray
+		Next i
+	End Sub
 
 	' helper function to make a new sprite 
 	Public Shared Function makeNewSprite(ByVal source As String) As Image
@@ -730,6 +909,45 @@ Public Class GameManager
 		Dim newBitmap As New BitmapImage(New Uri("pack://application:,,," & source))
 		Return newBitmap
 	End Function
+
+	' helper to generate byte array from bitmap
+	Public Shared Function getPixelData(ByVal collisionImage As BitmapImage) As Byte()
+		Dim stride As Integer = collisionImage.PixelWidth * collisionImage.Format.BitsPerPixel / 8
+		Dim pixelArray((collisionImage.PixelHeight * stride) - 1) As Byte
+		collisionImage.CopyPixels(pixelArray, stride, 0)
+		Return pixelArray
+	End Function
+
+	'' helper to generate map of enemies
+	Public Shared Function generateEnemyMap(ByVal pixelArray As Byte(), ByVal dimensions As Size) As Entity(,)
+		Dim enemyMap(dimensions.Height - 1, dimensions.Width - 1) As Entity
+
+		Dim row As Integer = 0
+		Dim column As Integer = 0
+
+		For i = 0 To pixelArray.Length - 1 Step 4
+			Dim colour As Color
+			colour = Color.FromRgb(pixelArray(i + 2), pixelArray(i + 1), pixelArray(i))
+			Dim toAdd As Entity
+			toAdd = Nothing
+
+			Select Case colour.ToString()
+				Case "#FFFF0000"
+					toAdd = New Enemy_Fan(New Point((gameWidth * scaleFactor) + enemyBufferZone, row * 2 * scaleFactor))
+			End Select
+
+			enemyMap(row, column) = toAdd
+
+			column = column + 1
+			If column = dimensions.Width Then
+				column = 0
+				row = row + 1
+			End If
+		Next i
+
+		Return enemyMap
+	End Function
+
 #End Region
 
 

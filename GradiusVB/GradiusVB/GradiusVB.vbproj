@@ -229,6 +229,16 @@
     <Resource Include="Images\vicViper_Death_3.png" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Images\fan_1.png" />
+    <Resource Include="Images\fan_2.png" />
+    <Resource Include="Images\fan_3.png" />
+    <Resource Include="Images\enemy_map.png" />
+    <Resource Include="Images\fan_death_1.png" />
+    <Resource Include="Images\fan_death_2.png" />
+    <Resource Include="Images\fan_death_3.png" />
+    <Content Include="Sounds\kill.wav">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Sounds\shoot.wav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
