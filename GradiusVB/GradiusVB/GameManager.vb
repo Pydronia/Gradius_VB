@@ -86,12 +86,15 @@ Public Enum AnimationFrame
 	Neutral
 	Up
 	Down
+	Three
+	Four
+	Five
 End Enum
 
 ' Class for storing the representation of maps and terrain
 Public Class Map
 
-	Const mapMoveSpeed As Integer = 640
+	Const mapMoveSpeed As Integer = 64
 
 	Public control As Image
 
@@ -144,6 +147,7 @@ Public Class Entity
 
 	Public movementDirection As Vector
 	Public position As Point
+	Public startingPosition As Point
 	Public movementSpeed As Double
 	Public hitBox As Rect
 	Public freeDirections As Directions
@@ -158,6 +162,9 @@ Public Class Entity
 	Public deathAnimationDelayInterval As DateTime
 	Public deathAnimationDelayStart As DateTime
 
+	Public Const animationCycleTime As Integer = 200
+	Public lastFrame As DateTime
+
 	Public shallShoot As Boolean = False
 	Public shallChirp As Boolean = False
 	Public currentBullets(-1) As Entity
@@ -166,6 +173,7 @@ Public Class Entity
 	Public shallSpawn As Boolean = False
 
 	Public value As Integer
+	Public dropsPowerUp As Boolean = False
 
 	Public type As String
 	Public control As Image
@@ -174,6 +182,7 @@ Public Class Entity
 		Me.type = type
 		Me.control = control
 		Me.position = position
+		Me.startingPosition = position
 		Me.movementSpeed = movementSpeed
 		Me.deathAnimationDelay = 64
 		Me.deathFrameNum = -1
@@ -226,7 +235,7 @@ Public Class Entity
 
 	End Sub
 
-	Public Overridable Sub moveEntity(ByVal delta As TimeSpan)
+	Public Overridable Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
 		Dim newPosition As Point
 		newPosition = Vector.Add(movementDirection * distance, position)
@@ -243,13 +252,32 @@ Public Class Entity
 
 	End Sub
 
+	Public Overridable Sub resetState()
+		Me.position = startingPosition
+		Me.shallDestroy = False
+		Me.isDying = False
+		Me.shallChirp = False
+		Me.shallShoot = False
+		Me.shallSpawn = False
+		Me.deathFrameNum = -1
+		currentAnimationFrame = AnimationFrame.Neutral
+		ui_updatePosition()
+		ui_updateFrame()
+		hitBox.X = position.X
+		hitBox.Y = position.Y
+	End Sub
+
 End Class
 
+' class for enemy
 Public Class Enemy_Fan
 	Inherits Entity
 
-	Public Const animationCycleTime As Integer = 200
-	Public lastFrame As DateTime
+	' behaviour variables
+	Const turnPosition As Integer = 200
+	Private aboveFan As Boolean = False
+	Private hasTurned As Boolean = False
+	Private hasStraightened As Boolean = False
 
 	Sub New(ByVal position As Point)
 		MyBase.New("fan", GameManager.makeNewSprite("/Images/fan_1.png"), position, 256)
@@ -263,7 +291,26 @@ Public Class Enemy_Fan
 		lastFrame = DateTime.Now
 	End Sub
 
-	Public Overrides Sub moveEntity(ByVal delta As TimeSpan)
+	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
+		If position.X <= turnPosition And hasTurned = False Then
+			hasTurned = True
+			If position.Y > GameManager.gameHeight * GameManager.scaleFactor / 2 Then
+				movementDirection = New Vector(0.5, -1)
+			Else
+				aboveFan = True
+				movementDirection = New Vector(0.5, 1)
+			End If
+
+		End If
+
+		If hasTurned And Not hasStraightened Then
+			If (aboveFan And position.Y > vicViper.position.Y) Or (Not aboveFan And position.Y < vicViper.position.Y) Then
+				hasStraightened = True
+				movementDirection = New Vector(1.5, 0)
+			End If
+		End If
+
+
 		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
 		Dim newPosition As Point
 		newPosition = Vector.Add(movementDirection * distance, position)
@@ -276,6 +323,139 @@ Public Class Enemy_Fan
 		End If
 	End Sub
 
+	Public Overrides Sub resetState()
+		MyBase.resetState()
+		hasTurned = False
+		hasStraightened = False
+		movementDirection = New Vector(-1, 0)
+	End Sub
+
+End Class
+
+' class for enemy
+Public Class Enemy_Rugal
+	Inherits Entity
+
+	Sub New(ByVal position As Point)
+		MyBase.New("rugal", GameManager.makeNewSprite("/Images/rugal_1.png"), position, 256)
+		movementDirection = New Vector(-1, 0)
+
+		animationFrames = New BitmapImage(2) {GameManager.makeNewBitmapImage("/Images/rugal_1.png"), GameManager.makeNewBitmapImage("/Images/rugal_2.png"), GameManager.makeNewBitmapImage("/Images/rugal_3.png")}
+		deathAnimationFrames = New BitmapImage(2) {GameManager.makeNewBitmapImage("/Images/death_1.png"), GameManager.makeNewBitmapImage("/Images/death_2.png"), GameManager.makeNewBitmapImage("/Images/death_3.png")}
+
+		value = 100
+	End Sub
+
+	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
+
+		If position.Y > vicViper.position.Y + 2 Then
+			movementDirection = New Vector(-0.5, -0.15)
+			currentAnimationFrame = AnimationFrame.Up
+		ElseIf position.Y < vicViper.position.Y - 2 Then
+			movementDirection = New Vector(-0.5, 0.15)
+			currentAnimationFrame = AnimationFrame.Down
+		Else
+			movementDirection = New Vector(-1, 0)
+			currentAnimationFrame = AnimationFrame.Neutral
+		End If
+
+
+		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
+		Dim newPosition As Point
+		newPosition = Vector.Add(movementDirection * distance, position)
+		position = newPosition
+		hitBox.X = position.X
+		hitBox.Y = position.Y
+
+		If position.X > GameManager.gameWidth * GameManager.scaleFactor + GameManager.enemyBufferZone Or position.X < -GameManager.enemyBufferZone Or position.Y > GameManager.gameHeight * GameManager.scaleFactor + GameManager.enemyBufferZone Or position.Y < -GameManager.enemyBufferZone Then
+			shallDestroy = True
+		End If
+	End Sub
+
+End Class
+
+' class for enemy
+Public Class Enemy_Garun
+	Inherits Entity
+
+	Private baseLinePos As Double
+
+	Sub New(ByVal position As Point, ByVal isRed As Boolean)
+		MyBase.New("garun", GameManager.makeNewSprite("/Images/garun_1.png"), position, 256)
+		movementDirection = New Vector(-1, 0)
+
+		baseLinePos = position.Y
+
+		If isRed Then
+			dropsPowerUp = True
+			animationFrames = New BitmapImage(3) {GameManager.makeNewBitmapImage("/Images/garun_1_red.png"), GameManager.makeNewBitmapImage("/Images/garun_2_red.png"), GameManager.makeNewBitmapImage("/Images/garun_3_red.png"), GameManager.makeNewBitmapImage("/Images/garun_4_red.png")}
+		Else
+			animationFrames = New BitmapImage(3) {GameManager.makeNewBitmapImage("/Images/garun_1.png"), GameManager.makeNewBitmapImage("/Images/garun_2.png"), GameManager.makeNewBitmapImage("/Images/garun_3.png"), GameManager.makeNewBitmapImage("/Images/garun_4.png")}
+		End If
+
+		deathAnimationFrames = New BitmapImage(2) {GameManager.makeNewBitmapImage("/Images/death_1.png"), GameManager.makeNewBitmapImage("/Images/death_2.png"), GameManager.makeNewBitmapImage("/Images/death_3.png")}
+
+		value = 100
+
+		lastFrame = DateTime.Now
+	End Sub
+
+	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
+
+
+		' TODO here
+
+
+		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
+		Dim newPosition As Point
+		newPosition = Vector.Add(movementDirection * distance, position)
+		position = newPosition
+
+		position.Y = baseLinePos + 35 * Math.Sin(0.0185 * position.X)
+
+		hitBox.X = position.X
+		hitBox.Y = position.Y
+
+		If position.X > GameManager.gameWidth * GameManager.scaleFactor + GameManager.enemyBufferZone Or position.X < -GameManager.enemyBufferZone Or position.Y > GameManager.gameHeight * GameManager.scaleFactor + GameManager.enemyBufferZone Or position.Y < -GameManager.enemyBufferZone Then
+			shallDestroy = True
+		End If
+	End Sub
+
+End Class
+
+Public Class Enemy_Dee01
+	Inherits Entity
+
+	Sub New(ByVal position As Point, ByVal onRoof As Boolean)
+		MyBase.New("dee01", GameManager.makeNewSprite("/Images/dee01_1.png"), position, 64)
+		movementDirection = New Vector(-1, 0)
+
+		If onRoof Then
+			animationFrames = New BitmapImage(5) {GameManager.makeNewBitmapImage("/Images/dee01_1_r.png"), GameManager.makeNewBitmapImage("/Images/dee01_2_r.png"), GameManager.makeNewBitmapImage("/Images/dee01_3_r.png"), GameManager.makeNewBitmapImage("/Images/dee01_4_r.png"), GameManager.makeNewBitmapImage("/Images/dee01_5_r.png"), GameManager.makeNewBitmapImage("/Images/dee01_6_r.png")}
+		Else
+			animationFrames = New BitmapImage(5) {GameManager.makeNewBitmapImage("/Images/dee01_6.png"), GameManager.makeNewBitmapImage("/Images/dee01_5.png"), GameManager.makeNewBitmapImage("/Images/dee01_4.png"), GameManager.makeNewBitmapImage("/Images/dee01_3.png"), GameManager.makeNewBitmapImage("/Images/dee01_2.png"), GameManager.makeNewBitmapImage("/Images/dee01_1.png")}
+		End If
+
+		deathAnimationFrames = New BitmapImage(2) {GameManager.makeNewBitmapImage("/Images/death_1.png"), GameManager.makeNewBitmapImage("/Images/death_2.png"), GameManager.makeNewBitmapImage("/Images/death_3.png")}
+
+		value = 100
+	End Sub
+
+	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
+
+
+
+		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
+		Dim newPosition As Point
+		newPosition = Vector.Add(movementDirection * distance, position)
+		position = newPosition
+		hitBox.X = position.X
+		hitBox.Y = position.Y
+
+		If position.X > GameManager.gameWidth * GameManager.scaleFactor + GameManager.enemyBufferZone Or position.X < -GameManager.enemyBufferZone Or position.Y > GameManager.gameHeight * GameManager.scaleFactor + GameManager.enemyBufferZone Or position.Y < -GameManager.enemyBufferZone Then
+			shallDestroy = True
+		End If
+	End Sub
 End Class
 
 ' The class for the player entity
@@ -302,7 +482,7 @@ Public Class VicViper
 		Me.deathAnimationDelay = vicDeathDelayTime
 	End Sub
 
-	Public Sub resetState()
+	Public Overrides Sub resetState()
 		isDying = False
 		position = New Point(startingPosX, startingPosY)
 		movementDirection = New Vector(0, 0)
@@ -311,7 +491,7 @@ Public Class VicViper
 		deathFrameNum = -1
 	End Sub
 
-	Public Overrides Sub moveEntity(ByVal delta As TimeSpan)
+	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
 		Dim newPosition As Point
 		newPosition = Vector.Add(movementDirection * distance, position)
@@ -334,7 +514,7 @@ Public Class VicViper
 	End Sub
 
 	Public Overrides Sub generateBullet(ByRef gw As GameWindow, ByRef sm As SoundManager)
-		If currentBullets.Length < 2 Then
+		If currentBullets.Length < 2 And Not isDying Then
 			sm.playSoundEffect(SoundEffects.Shoot)
 			Dim bullet As Entity
 			bullet = New Entity("bullet", GameManager.makeNewSprite("/Images/vic_Bullet.png"), Point.Add(position, New Size(control.Width / 2, control.Height / 2)), 750)
@@ -493,6 +673,7 @@ Public Class GameManager
 	Private Sub reset()
 
 		For i = 0 To currentEnemies.Length - 1
+			currentEnemies(i).resetState()
 			gw.gameField.Children.Remove(currentEnemies(i).control)
 		Next i
 
@@ -628,7 +809,7 @@ Public Class GameManager
 	Private Function checkEnemyCollision() As Boolean
 		Dim hit As Boolean = False
 		For i = 0 To currentEnemies.Length - 1
-			If currentEnemies(i).hitBox.IntersectsWith(vicViper.hitBox) Then
+			If currentEnemies(i).hitBox.IntersectsWith(vicViper.hitBox) And Not currentEnemies(i).isDying Then
 				hit = True
 			End If
 		Next i
@@ -637,19 +818,19 @@ Public Class GameManager
 
 	' move the specified entity and update vicViper animation frame if applicable
 	Private Sub moveEntity(ByVal entity As Entity, ByVal delta As TimeSpan)
-		entity.moveEntity(delta)
+		entity.moveEntity(delta, vicViper)
 	End Sub
 
 	Private Sub moveEntities(ByVal delta As TimeSpan)
 
 		For i = 0 To currentEnemies.Length - 1
 			If Not currentEnemies(i).isDying Then
-				currentEnemies(i).moveEntity(delta)
+				currentEnemies(i).moveEntity(delta, vicViper)
 			End If
 		Next i
 
 		For i = 0 To vicViper.currentBullets.Length - 1
-			vicViper.currentBullets(i).moveEntity(delta)
+			vicViper.currentBullets(i).moveEntity(delta, vicViper)
 		Next i
 	End Sub
 
@@ -668,8 +849,6 @@ Public Class GameManager
 		startPos = CInt(Int(previousEnemyCheckPosition / (2 * scaleFactor))) Mod map.enemyMap.GetLength(1)
 		Dim endPos As Integer
 		endPos = CInt(Int(currentEnemyCheckPosition / (2 * scaleFactor))) Mod map.enemyMap.GetLength(1)
-
-		Console.WriteLine(CStr(startPos) & " " & CStr(endPos))
 
 		If endPos - startPos > 0 Then
 			' check columns for startPos + 1 -> endPos inclusive
@@ -710,24 +889,24 @@ Public Class GameManager
 		End If
 
 		For i = 0 To currentEnemies.Length - 1
-			If currentEnemies(i).type = "fan" Then
-				Dim currentFan As Enemy_Fan
-				currentFan = DirectCast(currentEnemies(i), Enemy_Fan)
+			If currentEnemies(i).type = "fan" Or currentEnemies(i).type = "garun" Then
 
-				If Not currentFan.isDying Then
+				If Not currentEnemies(i).isDying Then
 					' regular animation
-					If (DateTime.Now - currentFan.lastFrame).TotalMilliseconds >= Enemy_Fan.animationCycleTime Then
-						currentFan.currentAnimationFrame = (CInt(currentFan.currentAnimationFrame) + 1) Mod 3
-						currentFan.lastFrame = DateTime.Now
+					If (DateTime.Now - currentEnemies(i).lastFrame).TotalMilliseconds >= Enemy_Fan.animationCycleTime Then
+						currentEnemies(i).currentAnimationFrame = (CInt(currentEnemies(i).currentAnimationFrame) + 1) Mod currentEnemies(i).animationFrames.Length
+						currentEnemies(i).lastFrame = DateTime.Now
 					End If
-				Else
-					If (DateTime.Now - currentFan.deathAnimationDelayInterval).TotalMilliseconds >= currentFan.deathAnimationDelay Then
-						If currentFan.deathFrameNum >= currentFan.deathAnimationFrames.Length Then
-							currentFan.shallDestroy = True
-						End If
-						currentFan.deathAnimationDelayInterval = DateTime.Now
-						currentFan.deathFrameNum = currentFan.deathFrameNum + 1
+				End If
+			End If
+
+			If currentEnemies(i).isDying Then
+				If (DateTime.Now - currentEnemies(i).deathAnimationDelayInterval).TotalMilliseconds >= currentEnemies(i).deathAnimationDelay Then
+					If currentEnemies(i).deathFrameNum >= currentEnemies(i).deathAnimationFrames.Length Then
+						currentEnemies(i).shallDestroy = True
 					End If
+					currentEnemies(i).deathAnimationDelayInterval = DateTime.Now
+					currentEnemies(i).deathFrameNum = currentEnemies(i).deathFrameNum + 1
 				End If
 			End If
 		Next i
@@ -819,6 +998,7 @@ Public Class GameManager
 				gw.gameField.Children.Add(currentEnemies(i).control)
 				currentEnemies(i).shallSpawn = False
 			ElseIf currentEnemies(i).shallDestroy Then
+				currentEnemies(i).resetState()
 				Array.Resize(enemiesToDestroy, enemiesToDestroy.Length + 1)
 				enemiesToDestroy(enemiesToDestroy.Length - 1) = i
 				gw.gameField.Children.Remove(currentEnemies(i).control)
@@ -865,7 +1045,7 @@ Public Class GameManager
 
 	' updates which BGM to use
 	Private Sub updateBGM()
-		If sm.currentMusic = SoundEffects.Intro AndAlso map.position < -810 * scaleFactor Then
+		If sm.currentMusic = SoundEffects.Intro AndAlso Not vicViper.isDying AndAlso map.position < -810 * scaleFactor Then
 			sm.currentMusic = SoundEffects.Volcano
 			sm.playSoundEffect(SoundEffects.Volcano)
 		End If
@@ -934,6 +1114,16 @@ Public Class GameManager
 			Select Case colour.ToString()
 				Case "#FFFF0000"
 					toAdd = New Enemy_Fan(New Point((gameWidth * scaleFactor) + enemyBufferZone, row * 2 * scaleFactor))
+				Case "#FF00FF00"
+					toAdd = New Enemy_Rugal(New Point((gameWidth * scaleFactor) + enemyBufferZone, row * 2 * scaleFactor))
+				Case "#FF0000FF"
+					toAdd = New Enemy_Garun(New Point((gameWidth * scaleFactor) + enemyBufferZone, row * 2 * scaleFactor), False)
+				Case "#FF00F0FF"
+					toAdd = New Enemy_Garun(New Point((gameWidth * scaleFactor) + enemyBufferZone, row * 2 * scaleFactor), True)
+				Case "#FFFFFF00"
+					toAdd = New Enemy_Dee01(New Point((gameWidth * scaleFactor) + enemyBufferZone, row * 2 * scaleFactor), False)
+				Case "#FFFF00FF"
+					toAdd = New Enemy_Dee01(New Point((gameWidth * scaleFactor) + enemyBufferZone, row * 2 * scaleFactor), True)
 			End Select
 
 			enemyMap(row, column) = toAdd

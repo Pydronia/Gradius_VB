@@ -232,10 +232,36 @@
     <Resource Include="Images\fan_1.png" />
     <Resource Include="Images\fan_2.png" />
     <Resource Include="Images\fan_3.png" />
-    <Resource Include="Images\enemy_map.png" />
     <Resource Include="Images\fan_death_1.png" />
     <Resource Include="Images\fan_death_2.png" />
     <Resource Include="Images\fan_death_3.png" />
+    <Resource Include="Images\rugal_1.png" />
+    <Resource Include="Images\rugal_2.png" />
+    <Resource Include="Images\rugal_3.png" />
+    <Resource Include="Images\death_1.png" />
+    <Resource Include="Images\death_2.png" />
+    <Resource Include="Images\death_3.png" />
+    <Resource Include="Images\garun_1.png" />
+    <Resource Include="Images\garun_2.png" />
+    <Resource Include="Images\garun_3.png" />
+    <Resource Include="Images\garun_4.png" />
+    <Resource Include="Images\garun_1_red.png" />
+    <Resource Include="Images\garun_2_red.png" />
+    <Resource Include="Images\garun_3_red.png" />
+    <Resource Include="Images\garun_4_red.png" />
+    <Resource Include="Images\dee01_1_r.png" />
+    <Resource Include="Images\dee01_2_r.png" />
+    <Resource Include="Images\dee01_3_r.png" />
+    <Resource Include="Images\dee01_4_r.png" />
+    <Resource Include="Images\dee01_5_r.png" />
+    <Resource Include="Images\dee01_6_r.png" />
+    <Resource Include="Images\dee01_1.png" />
+    <Resource Include="Images\dee01_2.png" />
+    <Resource Include="Images\dee01_3.png" />
+    <Resource Include="Images\dee01_4.png" />
+    <Resource Include="Images\dee01_5.png" />
+    <Resource Include="Images\dee01_6.png" />
+    <Resource Include="Images\enemy_map.png" />
     <Content Include="Sounds\kill.wav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
