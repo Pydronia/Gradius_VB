@@ -148,6 +148,7 @@ Public Class Entity
 	Public movementDirection As Vector
 	Public position As Point
 	Public startingPosition As Point
+	Public baseMovementSpeed As Double
 	Public movementSpeed As Double
 	Public hitBox As Rect
 	Public freeDirections As Directions
@@ -166,8 +167,9 @@ Public Class Entity
 	Public lastFrame As DateTime
 
 	Public shallShoot As Boolean = False
+	Public shootTime As Integer
+	Public lastShootTime As DateTime
 	Public shallChirp As Boolean = False
-	Public currentBullets(-1) As Entity
 
 	Public shallDestroy As Boolean = False
 	Public shallSpawn As Boolean = False
@@ -183,6 +185,7 @@ Public Class Entity
 		Me.control = control
 		Me.position = position
 		Me.startingPosition = position
+		Me.baseMovementSpeed = movementSpeed
 		Me.movementSpeed = movementSpeed
 		Me.deathAnimationDelay = 64
 		Me.deathFrameNum = -1
@@ -218,22 +221,6 @@ Public Class Entity
 		End If
 	End Sub
 
-	' update the position of the entity's bullets, and destroy them if needed.
-	Public Sub ui_updateBullets(ByRef gw As GameWindow)
-		Dim toDestroy(-1) As Integer
-
-		For i = 0 To currentBullets.Length - 1
-			If currentBullets(i).shallDestroy Then
-				Array.Resize(toDestroy, toDestroy.Length + 1)
-				toDestroy(toDestroy.Length - 1) = i
-				gw.gameField.Children.Remove(currentBullets(i).control)
-			End If
-			currentBullets(i).ui_updatePosition()
-		Next i
-
-		GameManager.removeFromArray(currentBullets, toDestroy)
-
-	End Sub
 
 	Public Overridable Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
@@ -243,12 +230,12 @@ Public Class Entity
 		hitBox.X = position.X
 		hitBox.Y = position.Y
 
-		If position.X > GameManager.gameWidth * GameManager.scaleFactor Or position.X < 0 Or position.Y > GameManager.gameHeight * GameManager.scaleFactor Or position.Y < 0 Then
+		If hitBox.Right > GameManager.gameWidth * GameManager.scaleFactor - 1 Or position.X < 0 Or hitBox.Bottom > GameManager.gameHeight * GameManager.scaleFactor - 1 Or position.Y < 0 Then
 			shallDestroy = True
 		End If
 	End Sub
 
-	Public Overridable Sub generateBullet(ByRef gw As GameWindow, ByRef sm As SoundManager)
+	Public Overridable Sub generateBullet(ByRef gw As GameWindow, ByRef sm As SoundManager, ByRef gm As GameManager)
 
 	End Sub
 
@@ -402,10 +389,6 @@ Public Class Enemy_Garun
 
 	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 
-
-		' TODO here
-
-
 		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
 		Dim newPosition As Point
 		newPosition = Vector.Add(movementDirection * distance, position)
@@ -423,16 +406,25 @@ Public Class Enemy_Garun
 
 End Class
 
+' class for enemy
 Public Class Enemy_Dee01
 	Inherits Entity
+
+	Private onRoof As Boolean
+	Const baseShootTime As Integer = 3500
+	Const shootTimeRange As Integer = 2000
 
 	Sub New(ByVal position As Point, ByVal onRoof As Boolean)
 		MyBase.New("dee01", GameManager.makeNewSprite("/Images/dee01_1.png"), position, 64)
 		movementDirection = New Vector(-1, 0)
 
+		shootTime = generateRandomShootTime()
+
 		If onRoof Then
+			Me.onRoof = True
 			animationFrames = New BitmapImage(5) {GameManager.makeNewBitmapImage("/Images/dee01_1_r.png"), GameManager.makeNewBitmapImage("/Images/dee01_2_r.png"), GameManager.makeNewBitmapImage("/Images/dee01_3_r.png"), GameManager.makeNewBitmapImage("/Images/dee01_4_r.png"), GameManager.makeNewBitmapImage("/Images/dee01_5_r.png"), GameManager.makeNewBitmapImage("/Images/dee01_6_r.png")}
 		Else
+			Me.onRoof = False
 			animationFrames = New BitmapImage(5) {GameManager.makeNewBitmapImage("/Images/dee01_6.png"), GameManager.makeNewBitmapImage("/Images/dee01_5.png"), GameManager.makeNewBitmapImage("/Images/dee01_4.png"), GameManager.makeNewBitmapImage("/Images/dee01_3.png"), GameManager.makeNewBitmapImage("/Images/dee01_2.png"), GameManager.makeNewBitmapImage("/Images/dee01_1.png")}
 		End If
 
@@ -443,7 +435,22 @@ Public Class Enemy_Dee01
 
 	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 
+		Dim angle As Double
+		angle = getAngleToPlayer(vicViper)
 
+		If angle <= Math.PI / 6 Then
+			currentAnimationFrame = 0
+		ElseIf angle <= Math.PI / 3 Then
+			currentAnimationFrame = 1
+		ElseIf angle <= Math.PI / 2 Then
+			currentAnimationFrame = 2
+		ElseIf angle <= 2 * Math.PI / 3 Then
+			currentAnimationFrame = 3
+		ElseIf angle <= 5 * Math.PI / 6 Then
+			currentAnimationFrame = 4
+		Else
+			currentAnimationFrame = 5
+		End If
 
 		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
 		Dim newPosition As Point
@@ -456,6 +463,44 @@ Public Class Enemy_Dee01
 			shallDestroy = True
 		End If
 	End Sub
+
+	Private Function getAngleToPlayer(ByRef vicViper As VicViper) As Double
+		Dim angle As Double
+		If onRoof Then
+			angle = Math.Atan((vicViper.position.Y - position.Y) / (position.X - (vicViper.position.X + 32)))
+		Else
+			angle = Math.Atan((position.Y - vicViper.position.Y) / (position.X - (vicViper.position.X + 32)))
+		End If
+
+		If angle < 0 Then
+			angle = Math.PI + angle
+		End If
+		Return angle
+	End Function
+
+	Public Shared Function generateRandomShootTime()
+		Return baseShootTime + Int((shootTimeRange + 1) * Rnd() - shootTimeRange / 2)
+	End Function
+
+	Public Overrides Sub generateBullet(ByRef gw As GameWindow, ByRef sm As SoundManager, ByRef gm As GameManager)
+		If Not isDying Then
+			Dim bullet As Entity
+			bullet = New Entity("bullet", GameManager.makeNewSprite("/Images/enemy_bullet.png"), Point.Add(position, New Size(control.Width / 2, control.Height / 2)), 128)
+			Array.Resize(gm.currentBullets, gm.currentBullets.Length + 1)
+			gm.currentBullets(gm.currentBullets.Length - 1) = bullet
+			bullet.ui_updatePosition()
+			bullet.movementDirection = New Vector((gm.vicViper.position.X + 32) - position.X, gm.vicViper.position.Y - position.Y)
+
+			If bullet.movementDirection = New Vector(0, 0) Then
+				bullet.movementDirection = New Vector(0, 1)
+			Else
+				bullet.movementDirection.Normalize()
+			End If
+
+			gw.gameField.Children.Add(bullet.control)
+		End If
+	End Sub
+
 End Class
 
 ' The class for the player entity
@@ -468,6 +513,8 @@ Public Class VicViper
 	Public Const vicResetDelay As Integer = 2000
 
 	Private Const vicDeathDelayTime As Integer = 200
+
+	Public currentBullets(-1) As Entity
 
 
 	Public directionKeys As Directions
@@ -513,7 +560,23 @@ Public Class VicViper
 		hitBox.Y = position.Y
 	End Sub
 
-	Public Overrides Sub generateBullet(ByRef gw As GameWindow, ByRef sm As SoundManager)
+	Public Sub ui_updateBullets(ByRef gw As GameWindow)
+		Dim toDestroy(-1) As Integer
+
+		For i = 0 To currentBullets.Length - 1
+			If currentBullets(i).shallDestroy Then
+				Array.Resize(toDestroy, toDestroy.Length + 1)
+				toDestroy(toDestroy.Length - 1) = i
+				gw.gameField.Children.Remove(currentBullets(i).control)
+			End If
+			currentBullets(i).ui_updatePosition()
+		Next i
+
+		GameManager.removeFromArray(currentBullets, toDestroy)
+
+	End Sub
+
+	Public Overrides Sub generateBullet(ByRef gw As GameWindow, ByRef sm As SoundManager, ByRef gm As GameManager)
 		If currentBullets.Length < 2 And Not isDying Then
 			sm.playSoundEffect(SoundEffects.Shoot)
 			Dim bullet As Entity
@@ -571,6 +634,9 @@ Public Class GameManager
 	Private gameOverDelayStart As DateTime
 
 	Private currentEnemies(-1) As Entity
+	Public currentBullets(-1) As Entity
+
+	Private movementSpeedMultiplier As Double = 1
 
 
 #End Region
@@ -679,6 +745,11 @@ Public Class GameManager
 
 		ReDim currentEnemies(-1)
 
+		For j = 0 To currentBullets.Length - 1
+			gw.gameField.Children.Remove(currentBullets(j).control)
+		Next j
+		ReDim currentBullets(-1)
+
 		Canvas.SetZIndex(vicViper.control, 0)
 		shallReset = False
 
@@ -732,12 +803,28 @@ Public Class GameManager
 	' Check the collisions for the vicviper/entities
 	Private Function checkCollisions()
 
+		Dim hasDied As Boolean
+		hasDied = False
+
+		' enemy bullets checking
+		For j = 0 To currentBullets.Length - 1
+			If checkTerrain(currentBullets(j)) Then
+				currentBullets(j).shallDestroy = True
+			Else
+				Dim hit As Entity = checkHitsForBullet(currentBullets(j), False)
+				If hit IsNot Nothing Then
+					currentBullets(j).shallDestroy = True
+					hasDied = True
+				End If
+			End If
+		Next j
+
 		' vic viper bullets checking
 		For i = 0 To vicViper.currentBullets.Length - 1
 			If checkTerrain(vicViper.currentBullets(i)) Then
 				vicViper.currentBullets(i).shallDestroy = True
 			Else
-				Dim enemy As Entity = checkHitsForBullet(vicViper.currentBullets(i))
+				Dim enemy As Entity = checkHitsForBullet(vicViper.currentBullets(i), True)
 				If enemy IsNot Nothing Then
 					score = score + enemy.value
 					vicViper.currentBullets(i).shallDestroy = True
@@ -748,9 +835,7 @@ Public Class GameManager
 		Next i
 
 		' vicViper checking
-		Dim hasDied As Boolean
-		hasDied = False
-		If Not vicViper.isDying Then
+		If Not vicViper.isDying And Not hasDied Then
 			checkBoundaries()
 			hasDied = checkTerrain(vicViper) Or checkEnemyCollision()
 		End If
@@ -774,35 +859,43 @@ Public Class GameManager
 	Private Function checkTerrain(ByVal entity As Entity)
 		Dim collided As Boolean
 		collided = False
+		If Not entity.shallDestroy Then
+			Dim topLeftCoord As Point
+			topLeftCoord = New Point(CInt(Int((entity.hitBox.X - map.position) / (scaleFactor * 2))), CInt(Int((entity.hitBox.Y) / (scaleFactor * 2))))
+			Dim bottomRightCoord As Point
+			bottomRightCoord = New Point(CInt(Int((entity.hitBox.Right - map.position) / (scaleFactor * 2))), CInt(Int((entity.hitBox.Bottom) / (scaleFactor * 2))))
 
-		Dim topLeftCoord As Point
-		topLeftCoord = New Point(CInt(Int((entity.hitBox.X - map.position) / (scaleFactor * 2))), CInt(Int((entity.hitBox.Y) / (scaleFactor * 2))))
-		Dim bottomRightCoord As Point
-		bottomRightCoord = New Point(CInt(Int((entity.hitBox.Right - map.position) / (scaleFactor * 2))), CInt(Int((entity.hitBox.Bottom) / (scaleFactor * 2))))
-
-		Dim i As Integer = topLeftCoord.Y
-		Do Until collided Or i > bottomRightCoord.Y
-			Dim j As Integer = topLeftCoord.X
-			Do Until collided Or j > bottomRightCoord.X
-				If map.collisionMap(i, j) Then
-					collided = True
-				End If
-				j = j + 1
+			Dim i As Integer = topLeftCoord.Y
+			Do Until collided Or i > bottomRightCoord.Y
+				Dim j As Integer = topLeftCoord.X
+				Do Until collided Or j > bottomRightCoord.X
+					If map.collisionMap(i, j) Then
+						collided = True
+					End If
+					j = j + 1
+				Loop
+				i = i + 1
 			Loop
-			i = i + 1
-		Loop
-
+		End If
 		Return collided
 	End Function
 
-	Private Function checkHitsForBullet(ByRef bullet As Entity) As Entity
+	Private Function checkHitsForBullet(ByRef bullet As Entity, ByVal playerBullet As Boolean) As Entity
 		Dim hitEnemy As Entity
 		hitEnemy = Nothing
-		For i = 0 To currentEnemies.Length - 1
-			If bullet.hitBox.IntersectsWith(currentEnemies(i).hitBox) And Not currentEnemies(i).isDying Then
-				hitEnemy = currentEnemies(i)
+
+		If playerBullet Then
+			For i = 0 To currentEnemies.Length - 1
+				If bullet.hitBox.IntersectsWith(currentEnemies(i).hitBox) And Not currentEnemies(i).isDying Then
+					hitEnemy = currentEnemies(i)
+				End If
+			Next i
+		Else
+			If bullet.hitBox.IntersectsWith(vicViper.hitBox) And Not vicViper.isDying Then
+				hitEnemy = vicViper
 			End If
-		Next i
+		End If
+
 		Return hitEnemy
 	End Function
 
@@ -823,12 +916,19 @@ Public Class GameManager
 
 	Private Sub moveEntities(ByVal delta As TimeSpan)
 
+		' move enemies
 		For i = 0 To currentEnemies.Length - 1
 			If Not currentEnemies(i).isDying Then
 				currentEnemies(i).moveEntity(delta, vicViper)
 			End If
 		Next i
 
+		' move bullets
+		For i = 0 To currentBullets.Length - 1
+			currentBullets(i).moveEntity(delta, vicViper)
+		Next i
+
+		' move player bullets
 		For i = 0 To vicViper.currentBullets.Length - 1
 			vicViper.currentBullets(i).moveEntity(delta, vicViper)
 		Next i
@@ -897,6 +997,13 @@ Public Class GameManager
 						currentEnemies(i).currentAnimationFrame = (CInt(currentEnemies(i).currentAnimationFrame) + 1) Mod currentEnemies(i).animationFrames.Length
 						currentEnemies(i).lastFrame = DateTime.Now
 					End If
+				End If
+			ElseIf currentEnemies(i).type = "dee01" Then
+				' enemyShooting
+				If (DateTime.Now - currentEnemies(i).lastShootTime).TotalMilliseconds >= currentEnemies(i).shootTime Then
+					currentEnemies(i).shallShoot = True
+					currentEnemies(i).shootTime = Enemy_Dee01.generateRandomShootTime()
+					currentEnemies(i).lastShootTime = DateTime.Now
 				End If
 			End If
 
@@ -997,6 +1104,11 @@ Public Class GameManager
 			If currentEnemies(i).shallSpawn Then
 				gw.gameField.Children.Add(currentEnemies(i).control)
 				currentEnemies(i).shallSpawn = False
+				currentEnemies(i).lastShootTime = DateTime.Now
+				If currentEnemies(i).type <> "dee01" Then
+					currentEnemies(i).movementSpeed = currentEnemies(i).baseMovementSpeed * movementSpeedMultiplier
+				End If
+
 			ElseIf currentEnemies(i).shallDestroy Then
 				currentEnemies(i).resetState()
 				Array.Resize(enemiesToDestroy, enemiesToDestroy.Length + 1)
@@ -1005,16 +1117,20 @@ Public Class GameManager
 			ElseIf currentEnemies(i).shallChirp Then
 				sm.playSoundEffect(SoundEffects.Kill)
 				currentEnemies(i).shallChirp = False
+			ElseIf currentEnemies(i).shallShoot Then
+				currentEnemies(i).generateBullet(gw, sm, Me)
+				currentEnemies(i).shallShoot = False
 			End If
 			currentEnemies(i).ui_updatePosition()
 			currentEnemies(i).ui_updateFrame()
 		Next i
+		updateBullets()
 
 		removeFromArray(currentEnemies, enemiesToDestroy)
 
 		' vic Viper
 		If vicViper.shallShoot Then
-			vicViper.generateBullet(gw, sm)
+			vicViper.generateBullet(gw, sm, Me)
 			vicViper.shallShoot = False
 		End If
 
@@ -1032,6 +1148,21 @@ Public Class GameManager
 		End If
 	End Sub
 
+	Private Sub updateBullets()
+		Dim toDestroy(-1) As Integer
+
+		For i = 0 To currentBullets.Length - 1
+			If currentBullets(i).shallDestroy Then
+				Array.Resize(toDestroy, toDestroy.Length + 1)
+				toDestroy(toDestroy.Length - 1) = i
+				gw.gameField.Children.Remove(currentBullets(i).control)
+			End If
+			currentBullets(i).ui_updatePosition()
+		Next i
+
+		GameManager.removeFromArray(currentBullets, toDestroy)
+	End Sub
+
 	' updates text elements
 	Private Sub updateInterface()
 		If lives >= 0 Then
@@ -1043,11 +1174,15 @@ Public Class GameManager
 
 	End Sub
 
-	' updates which BGM to use
+	' updates which BGM to use. also multiplies enemy movement speed!
 	Private Sub updateBGM()
-		If sm.currentMusic = SoundEffects.Intro AndAlso Not vicViper.isDying AndAlso map.position < -810 * scaleFactor Then
+		If sm.currentMusic = SoundEffects.Intro AndAlso Not vicViper.isDying AndAlso (map.position < -810 * scaleFactor And map.position > -820 * scaleFactor) Then
 			sm.currentMusic = SoundEffects.Volcano
 			sm.playSoundEffect(SoundEffects.Volcano)
+		ElseIf sm.currentMusic = SoundEffects.Volcano AndAlso Not vicViper.isDying AndAlso map.position < -3320 * scaleFactor Then
+			sm.currentMusic = SoundEffects.Intro
+			sm.playSoundEffect(SoundEffects.Intro)
+			movementSpeedMultiplier = movementSpeedMultiplier + 0.2
 		End If
 	End Sub
 

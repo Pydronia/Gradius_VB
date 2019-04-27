@@ -261,6 +261,7 @@
     <Resource Include="Images\dee01_4.png" />
     <Resource Include="Images\dee01_5.png" />
     <Resource Include="Images\dee01_6.png" />
+    <Resource Include="Images\enemy_bullet.png" />
     <Resource Include="Images\enemy_map.png" />
     <Content Include="Sounds\kill.wav">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
