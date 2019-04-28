@@ -99,6 +99,7 @@
 		gm = New GameManager(initialInput.Text, soundSetting)
 		Dim gw As GameWindow
 		gw = New GameWindow(gm)
+		gm.sm.playSoundEffect(SoundEffects.Start)
 		gw.Show()
 		Me.Close()
 	End Sub

@@ -26,6 +26,8 @@
 				gm.setInputDirection(True, e.Key)
 			ElseIf e.Key = Key.A Then
 				gm.prepareToShoot()
+			ElseIf e.Key = Key.S Then
+				gm.selectPowerUp()
 			End If
 		End If
 	End Sub
@@ -37,14 +39,6 @@
 	End Sub
 
 #End Region
-
-	' Test end game
-	Private Sub btnTst_Click(sender As System.Object, e As System.Windows.RoutedEventArgs) Handles btnTst.Click
-		Dim sw As ScoreWindow
-		sw = New ScoreWindow(gm)
-		sw.Show()
-		Me.Close()
-	End Sub
 
 	
 End Class

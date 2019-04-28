@@ -32,10 +32,7 @@
 				</Style>
 			</StackPanel.Resources>
 			<Image Name="pm_Speed" Source="/Images/PM_Speed.png" Width="62"/>
-			<Image Name="pm_Missile" Source="/Images/PM_Missile.png" Width="62"/>
-			<Image Name="pm_Double" Source="/Images/PM_Double.png" Width="62"/>
 			<Image Name="pm_Laser" Source="/Images/PM_Laser.png" Width="62"/>
-			<Image Name="pm_Option" Source="/Images/PM_Option.png" Width="62"/>
 			<Image Name="pm_Shield" Source="/Images/PM_Shield.png" Width="62" />
 		</StackPanel>
 		
@@ -57,7 +54,6 @@
 			<TextBlock Name="lblScore" Margin="4,0,0,0">0000000</TextBlock>
 			<TextBlock Margin="16,0,0,0">HI:</TextBlock>
 			<TextBlock Name="lblHi" Margin="4,0,0,0">0000000</TextBlock>
-			<Button Name="btnTst">TST</Button>
 		</StackPanel>
 		
 	</Grid>

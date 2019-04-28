@@ -5,7 +5,47 @@
 	ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight"
 	Background="Black" Foreground="White"
 	UseLayoutRounding="True" Icon="/Images/Icon.ico">
-   <Grid Width="300" Height="300">
-        
-   </Grid>
+   <Grid Width="600" Height="500">
+		<Grid.RowDefinitions>
+			<RowDefinition/>
+			<RowDefinition/>
+			<RowDefinition/>
+		</Grid.RowDefinitions>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="2.5*"/>
+			<ColumnDefinition Width="1*"/>
+		</Grid.ColumnDefinitions>
+
+		<TextBlock Grid.RowSpan="3" HorizontalAlignment="Left" VerticalAlignment="Center" TextAlignment="Left" Style="{StaticResource ArcadeText}" FontSize="12" TextWrapping="Wrap" Margin="20,0,0,0">
+			Welcome to Gradius - A side scrolling shooter made in 1985 for arcade and home consoles such as the Nintendo Entertainment System. The aim of the game is to maneuver your spacecraft - the Vic Viper - to defend against an oncoming rush of alien enemies.<LineBreak/><LineBreak/><LineBreak/>
+			You must survive for as long as you can by avoiding enemy fire and destroy the hordes of alien spacecraft. Use the arrow keys to move the Vic Viper around the screen. Don't forget to avoid the terrain, or you'll crash! Press the A key to fire bullets in-front of your ship. Aim carefully to destroy enemies as effectively as possible!<LineBreak/><LineBreak/><LineBreak/>
+			Throughout your journey you will come across orange power capsules. Collect them to advance the blue power meter at the bottom of your screen. Press the S key to spend your capsules and enable the highlighted power up! Speed Up increases your movement speed, and Laser turns your regular bullets into enemy penetrating lasers. The final power up is a secret power. Good luck, pilot!
+			
+		</TextBlock>
+		<Image Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Source="/Images/vicViper.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="56" Margin="20,30,0,0" />
+		<Image Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top" Source="/Images/fan_1.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="28" Margin="0,20,30,0" />
+		<Image Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Source="/Images/rugal_2.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="28" Margin="0,0,30,20" />
+		<Image Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Bottom" Source="/Images/dee01_3.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="28" Margin="15,0,0,10" />
+		<Image Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Bottom" Source="/Images/enemy_bullet.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="12" Margin="40,0,0,50" />
+		<Image Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Bottom" Source="/Images/land.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="92" Stretch="Fill" Height="14" StretchDirection="Both" />
+		<Image Height="14" HorizontalAlignment="Left" Margin="92,0,0,0" RenderOptions.BitmapScalingMode="NearestNeighbor" Source="/Images/land.png" Stretch="Fill" StretchDirection="Both" VerticalAlignment="Bottom" Width="92" Grid.Column="1" />
+
+		<Image Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Top" Source="/Images/arrows.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="56" Margin="0,15,0,0" />
+		<TextBlock Grid.Column="1" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top" Style="{StaticResource ArcadeText}" FontSize="6" Margin="0,60,0,0">
+			MOVEMENT
+		</TextBlock>
+		<Image Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Bottom" Source="/Images/A.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="32" Margin="30,0,0,30" />
+		<TextBlock Grid.Column="1" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Bottom" Style="{StaticResource ArcadeText}" FontSize="6" Margin="35,0,0,20">
+			FIRE
+		</TextBlock>
+		<Image Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Source="/Images/S.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="32" Margin="0,0,30,30" />
+		<TextBlock Grid.Column="1" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Style="{StaticResource ArcadeText}" FontSize="6" Margin="0,0,22,20">
+			POWER-UP
+		</TextBlock>
+
+		<Image Grid.Column="1" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Top" Source="/Images/powerup_2.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="64" Margin="0,30,0,0" />
+		<Image Grid.Column="1" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" Source="/Images/PM_Speed.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="62" Margin="0,0,0,50" />
+		<Image Grid.Column="1" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" Source="/Images/PM_Laser.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="62" Margin="0,0,0,30" />
+		<Image Grid.Column="1" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Bottom" Source="/Images/PM_Shield.png" RenderOptions.BitmapScalingMode="NearestNeighbor" Width="62" Margin="0,0,0,12" />
+	</Grid>
 </Window>

@@ -33,6 +33,7 @@
 		Next i
 	End Sub
 
+	' go back to launchwindow
 	Private Sub btnAgain_Click(sender As System.Object, e As System.Windows.RoutedEventArgs) Handles btnAgain.Click
 		Dim lw As LaunchWindow
 		lw = New LaunchWindow()

@@ -5,7 +5,11 @@ Public Enum SoundEffects
 	Intro
 	Volcano
 	Shoot
+	Laser
 	Kill
+	Collect
+	PowerUp
+	Start
 End Enum
 
 ' Class to manage the playing of sound effects and background sounds.
@@ -33,7 +37,7 @@ Public Class SoundManager
 				playSound(backgroundPlayer, effect)
 			Case SoundEffects.Shoot
 				playSound(bulletPlayer, effect)
-			Case SoundEffects.Kill
+			Case SoundEffects.Kill, SoundEffects.Collect, SoundEffects.PowerUp, SoundEffects.Start
 				playSound(enemyPlayer, effect)
 		End Select
 	End Sub
@@ -54,6 +58,12 @@ Public Class SoundManager
 				uri = New Uri("Sounds/shoot.wav", UriKind.Relative)
 			Case SoundEffects.Kill
 				uri = New Uri("Sounds/kill.wav", UriKind.Relative)
+			Case SoundEffects.Collect
+				uri = New Uri("Sounds/power_up.wav", UriKind.Relative)
+			Case SoundEffects.PowerUp
+				uri = New Uri("Sounds/select_power.wav", UriKind.Relative)
+			Case SoundEffects.Start
+				uri = New Uri("Sounds/start.wav", UriKind.Relative)
 		End Select
 		player.Open(uri)
 
@@ -105,7 +115,7 @@ Public Class Map
 	Public position As Double
 	Public movementSpeed As Double
 
-	Public Sub New(ByVal control As Image, ByVal collisionImage As BitmapImage, ByVal enemyMapImage As BitmapImage)
+	Public Sub New(ByVal control As Image, ByVal collisionImage As BitmapImage, ByVal enemyMapImage As BitmapImage, ByRef vicViper As VicViper)
 		Me.control = control
 		Me.length = control.Width
 		Me.position = 0
@@ -132,7 +142,7 @@ Public Class Map
 		Next i
 
 		' enemyMap generation
-		enemyMap = GameManager.generateEnemyMap(GameManager.getPixelData(enemyMapImage), New Size(enemyMapImage.PixelWidth, enemyMapImage.PixelHeight))
+		enemyMap = GameManager.generateEnemyMap(GameManager.getPixelData(enemyMapImage), New Size(enemyMapImage.PixelWidth, enemyMapImage.PixelHeight), vicViper)
 
 	End Sub
 
@@ -142,6 +152,7 @@ Public Class Map
 
 End Class
 
+#Region "Entities"
 ' Overall class for entities, including bullets, enemies, and the player
 Public Class Entity
 
@@ -176,6 +187,7 @@ Public Class Entity
 
 	Public value As Integer
 	Public dropsPowerUp As Boolean = False
+	Public formationNumber As Integer
 
 	Public type As String
 	Public control As Image
@@ -207,6 +219,7 @@ Public Class Entity
 		Canvas.SetTop(control, position.Y)
 	End Sub
 
+	' update what texture to show for this entity
 	Public Sub ui_updateFrame()
 		If Me.isDying Then
 			If deathFrameNum >= deathAnimationFrames.Length Then
@@ -221,7 +234,7 @@ Public Class Entity
 		End If
 	End Sub
 
-
+	' apply the vector calculation to move the entity
 	Public Overridable Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
 		Dim newPosition As Point
@@ -239,6 +252,7 @@ Public Class Entity
 
 	End Sub
 
+	' function to reset the entity state
 	Public Overridable Sub resetState()
 		Me.position = startingPosition
 		Me.shallDestroy = False
@@ -278,6 +292,7 @@ Public Class Enemy_Fan
 		lastFrame = DateTime.Now
 	End Sub
 
+	' movement for the fan enemy
 	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 		If position.X <= turnPosition And hasTurned = False Then
 			hasTurned = True
@@ -333,6 +348,7 @@ Public Class Enemy_Rugal
 		value = 100
 	End Sub
 
+	' movement for rugal enemy
 	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 
 		If position.Y > vicViper.position.Y + 2 Then
@@ -387,6 +403,7 @@ Public Class Enemy_Garun
 		lastFrame = DateTime.Now
 	End Sub
 
+	' movement for garun enemy (sine wave)
 	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 
 		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
@@ -433,6 +450,7 @@ Public Class Enemy_Dee01
 		value = 100
 	End Sub
 
+	' movement (animation) for dee-01 enemy (turret)
 	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 
 		Dim angle As Double
@@ -464,6 +482,7 @@ Public Class Enemy_Dee01
 		End If
 	End Sub
 
+	' helper function to get the angle to the player from the turret (anti-clockwise from the negative x axis)
 	Private Function getAngleToPlayer(ByRef vicViper As VicViper) As Double
 		Dim angle As Double
 		If onRoof Then
@@ -482,6 +501,7 @@ Public Class Enemy_Dee01
 		Return baseShootTime + Int((shootTimeRange + 1) * Rnd() - shootTimeRange / 2)
 	End Function
 
+	' create the enemy bullet
 	Public Overrides Sub generateBullet(ByRef gw As GameWindow, ByRef sm As SoundManager, ByRef gm As GameManager)
 		If Not isDying Then
 			Dim bullet As Entity
@@ -503,6 +523,48 @@ Public Class Enemy_Dee01
 
 End Class
 
+' class for enemy
+Public Class PowerUp
+	Inherits Entity
+
+	Sub New(ByVal position As Point)
+		MyBase.New("powerup", GameManager.makeNewSprite("/Images/powerup_1.png"), position, 64)
+		movementDirection = New Vector(-1, 0)
+
+		animationFrames = New BitmapImage(2) {GameManager.makeNewBitmapImage("/Images/powerup_1.png"), GameManager.makeNewBitmapImage("/Images/powerup_2.png"), GameManager.makeNewBitmapImage("/Images/powerup_3.png")}
+
+		lastFrame = DateTime.Now
+		value = 500
+		shallSpawn = True
+	End Sub
+
+	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
+
+		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
+		Dim newPosition As Point
+		newPosition = Vector.Add(movementDirection * distance, position)
+		position = newPosition
+		hitBox.X = position.X
+		hitBox.Y = position.Y
+
+		If position.X > GameManager.gameWidth * GameManager.scaleFactor + GameManager.enemyBufferZone Or position.X < -GameManager.enemyBufferZone Or position.Y > GameManager.gameHeight * GameManager.scaleFactor + GameManager.enemyBufferZone Or position.Y < -GameManager.enemyBufferZone Then
+			shallDestroy = True
+		End If
+	End Sub
+
+	Public Overrides Sub resetState()
+		MyBase.resetState()
+	End Sub
+
+End Class
+
+' enum for different ammo types
+Public Enum AmmunitionType
+	Normal
+	Laser
+	Rapid
+End Enum
+
 ' The class for the player entity
 Public Class VicViper
 	Inherits Entity
@@ -515,6 +577,10 @@ Public Class VicViper
 	Private Const vicDeathDelayTime As Integer = 200
 
 	Public currentBullets(-1) As Entity
+
+	Public ammoType As AmmunitionType = AmmunitionType.Normal
+
+	Public formationKills(-1) As Integer
 
 
 	Public directionKeys As Directions
@@ -536,8 +602,10 @@ Public Class VicViper
 		movementSpeed = startingSpeed
 		currentAnimationFrame = AnimationFrame.Neutral
 		deathFrameNum = -1
+		ammoType = AmmunitionType.Normal
 	End Sub
 
+	' handle movement
 	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
 		Dim newPosition As Point
@@ -560,6 +628,7 @@ Public Class VicViper
 		hitBox.Y = position.Y
 	End Sub
 
+	' update the bullets
 	Public Sub ui_updateBullets(ByRef gw As GameWindow)
 		Dim toDestroy(-1) As Integer
 
@@ -576,11 +645,18 @@ Public Class VicViper
 
 	End Sub
 
+	' generate a bullet
 	Public Overrides Sub generateBullet(ByRef gw As GameWindow, ByRef sm As SoundManager, ByRef gm As GameManager)
-		If currentBullets.Length < 2 And Not isDying Then
+		If (currentBullets.Length < 2 Or ammoType = AmmunitionType.Rapid) And Not isDying Then
 			sm.playSoundEffect(SoundEffects.Shoot)
 			Dim bullet As Entity
-			bullet = New Entity("bullet", GameManager.makeNewSprite("/Images/vic_Bullet.png"), Point.Add(position, New Size(control.Width / 2, control.Height / 2)), 750)
+
+			If ammoType = AmmunitionType.Laser Then
+				bullet = New Entity("bullet", GameManager.makeNewSprite("/Images/laser.png"), Point.Add(position, New Size(control.Width / 2, control.Height / 2)), 1200)
+			Else
+				bullet = New Entity("bullet", GameManager.makeNewSprite("/Images/vic_Bullet.png"), Point.Add(position, New Size(control.Width / 2, control.Height / 2)), 750)
+			End If
+
 			Array.Resize(currentBullets, currentBullets.Length + 1)
 			currentBullets(currentBullets.Length - 1) = bullet
 			bullet.ui_updatePosition()
@@ -591,7 +667,9 @@ Public Class VicViper
 
 End Class
 
+#End Region
 
+' main class to handle game processing and logic flow
 Public Class GameManager
 
 	Public gw As GameWindow
@@ -610,13 +688,12 @@ Public Class GameManager
 	Const vicAnimationDelay As Integer = 100
 	Const gameOverDelay As Integer = 2500
 
-
 	Public vicViper As VicViper
 
 	Public map As Map
 	Private previousEnemyCheckPosition As Double
 
-	Private sm As SoundManager
+	Public sm As SoundManager
 
 	Private lives As Integer
 	Private score As Integer
@@ -624,6 +701,9 @@ Public Class GameManager
 	Private gameTimer As Timers.Timer
 	Private previousTime As DateTime
 	Private deltaLoopTime As TimeSpan
+
+	Private powerUpImages As Image()
+	Private powerUpSelected As Integer
 
 	Private vicAnimationTicking As Boolean
 	Private vicAnimationDelayStart As DateTime
@@ -643,6 +723,7 @@ Public Class GameManager
 
 #Region "Delegates"
 	Private Delegate Sub InvokeDelegate()
+	Private Delegate Sub PowerUpDelegate(ByVal position As Point)
 #End Region
 
 #Region "Constructor/Getters"
@@ -699,6 +780,22 @@ Public Class GameManager
 		vicViper.shallShoot = True
 	End Sub
 
+	' apply a power-up
+	Public Sub selectPowerUp()
+		If Not vicViper.isDying Then
+			Select Case powerUpSelected
+				Case 0
+					vicViper.movementSpeed = vicViper.movementSpeed * 1.2
+				Case 1
+					vicViper.ammoType = AmmunitionType.Laser
+				Case 2
+					vicViper.ammoType = AmmunitionType.Rapid
+			End Select
+			sm.playSoundEffect(SoundEffects.PowerUp)
+			powerUpSelected = -1
+		End If
+	End Sub
+
 #End Region
 
 #Region "Initialisation/Reset Routines"
@@ -713,13 +810,16 @@ Public Class GameManager
 
 	' setup when game window created
 	Public Sub setup()
+		powerUpImages = New Image(2) {gw.pm_Speed, gw.pm_Laser, gw.pm_Shield}
+		powerUpSelected = -1
+
 		previousTime = DateTime.Now
 
 		vicViper = New VicViper(makeNewSprite("/Images/vicViper.png"))
 		vicViper.ui_updatePosition()
 		gw.gameField.Children.Add(vicViper.control)
 
-		map = New Map(makeNewSprite("/Images/map.png"), makeNewBitmapImage("/Images/collisionMap.png"), makeNewBitmapImage("/Images/enemy_map.png"))
+		map = New Map(makeNewSprite("/Images/map.png"), makeNewBitmapImage("/Images/collisionMap.png"), makeNewBitmapImage("/Images/enemy_map.png"), vicViper)
 		map.ui_updateMapPosition()
 		gw.gameField.Children.Add(map.control)
 
@@ -733,6 +833,7 @@ Public Class GameManager
 		AddHandler gameTimer.Elapsed, AddressOf gameLoop
 		gameTimer.AutoReset = False
 		gameTimer.Enabled = True
+
 	End Sub
 
 	' Reset for when you loose a life
@@ -750,6 +851,16 @@ Public Class GameManager
 		Next j
 		ReDim currentBullets(-1)
 
+		For i = 0 To vicViper.formationKills.Length - 1
+			vicViper.formationKills(i) = 0
+		Next i
+
+		If powerUpSelected >= 0 Then
+			powerUpSelected = 0
+		Else
+			powerUpSelected = -1
+		End If
+
 		Canvas.SetZIndex(vicViper.control, 0)
 		shallReset = False
 
@@ -760,6 +871,7 @@ Public Class GameManager
 		sm.currentMusic = SoundEffects.Intro
 	End Sub
 
+	' close the window, display highscores.
 	Private Sub endGame()
 		sm.playSoundEffect(SoundEffects.GameOver)
 		Dim sw As ScoreWindow
@@ -771,7 +883,7 @@ Public Class GameManager
 #End Region
 
 #Region "Main Game Loop"
-	' The game loop which runs once every ~15-16ms. Due to the nature of timers it is not always exact, however it is inconsequential and managable.
+	' The game loop which runs once every ~15-16ms. This is the main line of the program. Due to the nature of timers it is not always exact, however it is inconsequential and managable.
 	Private Sub gameLoop(send As Object, e As Timers.ElapsedEventArgs)
 		' delta time calculation (for accurate movement)
 		Dim currentTime As DateTime
@@ -827,21 +939,43 @@ Public Class GameManager
 				Dim enemy As Entity = checkHitsForBullet(vicViper.currentBullets(i), True)
 				If enemy IsNot Nothing Then
 					score = score + enemy.value
-					vicViper.currentBullets(i).shallDestroy = True
+					If vicViper.ammoType <> AmmunitionType.Laser Then
+						vicViper.currentBullets(i).shallDestroy = True
+					End If
 					enemy.isDying = True
 					enemy.shallChirp = True
+
+					If enemy.formationNumber <> 0 Then
+						vicViper.formationKills(enemy.formationNumber) = vicViper.formationKills(enemy.formationNumber) + 1
+
+						For j = 0 To vicViper.formationKills.Length - 1
+							If vicViper.formationKills(j) = 4 Then
+								gw.Dispatcher.Invoke(New PowerUpDelegate(AddressOf preparePowerUp), enemy.position)
+								vicViper.formationKills(j) = 0
+							End If
+						Next j
+
+					End If
+
+					If enemy.dropsPowerUp Then
+						gw.Dispatcher.Invoke(New PowerUpDelegate(AddressOf preparePowerUp), enemy.position)
+					End If
+
 				End If
 			End If
 		Next i
 
+
 		' vicViper checking
 		If Not vicViper.isDying And Not hasDied Then
 			checkBoundaries()
+			checkPowerUps()
 			hasDied = checkTerrain(vicViper) Or checkEnemyCollision()
 		End If
 		Return hasDied
 	End Function
 
+	' check the edges of the screen to prevent movement outside the game screen
 	Private Sub checkBoundaries()
 		Dim previous As Directions
 		previous = vicViper.freeDirections
@@ -856,6 +990,19 @@ Public Class GameManager
 		End If
 	End Sub
 
+	' check for collisions with powerups.
+	Private Sub checkPowerUps()
+		For i = 0 To currentEnemies.Length - 1
+			If currentEnemies(i).type = "powerup" AndAlso vicViper.hitBox.IntersectsWith(currentEnemies(i).hitBox) Then
+				currentEnemies(i).shallDestroy = True
+				currentEnemies(i).shallChirp = True
+				score = score + currentEnemies(i).value
+				powerUpSelected = (powerUpSelected + 1) Mod powerUpImages.Length
+			End If
+		Next i
+	End Sub
+
+	' check collisions with the terrain
 	Private Function checkTerrain(ByVal entity As Entity)
 		Dim collided As Boolean
 		collided = False
@@ -880,13 +1027,14 @@ Public Class GameManager
 		Return collided
 	End Function
 
+	' check any hits for a bullet
 	Private Function checkHitsForBullet(ByRef bullet As Entity, ByVal playerBullet As Boolean) As Entity
 		Dim hitEnemy As Entity
 		hitEnemy = Nothing
 
 		If playerBullet Then
 			For i = 0 To currentEnemies.Length - 1
-				If bullet.hitBox.IntersectsWith(currentEnemies(i).hitBox) And Not currentEnemies(i).isDying Then
+				If bullet.hitBox.IntersectsWith(currentEnemies(i).hitBox) And Not currentEnemies(i).isDying And Not currentEnemies(i).type = "powerup" Then
 					hitEnemy = currentEnemies(i)
 				End If
 			Next i
@@ -899,10 +1047,11 @@ Public Class GameManager
 		Return hitEnemy
 	End Function
 
+	' check for a player collision with the enemy
 	Private Function checkEnemyCollision() As Boolean
 		Dim hit As Boolean = False
 		For i = 0 To currentEnemies.Length - 1
-			If currentEnemies(i).hitBox.IntersectsWith(vicViper.hitBox) And Not currentEnemies(i).isDying Then
+			If currentEnemies(i).hitBox.IntersectsWith(vicViper.hitBox) And Not currentEnemies(i).isDying And Not currentEnemies(i).type = "powerup" Then
 				hit = True
 			End If
 		Next i
@@ -914,6 +1063,7 @@ Public Class GameManager
 		entity.moveEntity(delta, vicViper)
 	End Sub
 
+	' move all entities
 	Private Sub moveEntities(ByVal delta As TimeSpan)
 
 		' move enemies
@@ -934,6 +1084,7 @@ Public Class GameManager
 		Next i
 	End Sub
 
+	' map scrolling
 	Private Sub moveMap(ByVal delta As TimeSpan)
 		map.position = map.position - ((delta.TotalMilliseconds / 1000) * map.movementSpeed)
 
@@ -989,11 +1140,11 @@ Public Class GameManager
 		End If
 
 		For i = 0 To currentEnemies.Length - 1
-			If currentEnemies(i).type = "fan" Or currentEnemies(i).type = "garun" Then
+			If currentEnemies(i).type = "fan" Or currentEnemies(i).type = "garun" Or currentEnemies(i).type = "powerup" Then
 
 				If Not currentEnemies(i).isDying Then
 					' regular animation
-					If (DateTime.Now - currentEnemies(i).lastFrame).TotalMilliseconds >= Enemy_Fan.animationCycleTime Then
+					If (DateTime.Now - currentEnemies(i).lastFrame).TotalMilliseconds >= Entity.animationCycleTime Then
 						currentEnemies(i).currentAnimationFrame = (CInt(currentEnemies(i).currentAnimationFrame) + 1) Mod currentEnemies(i).animationFrames.Length
 						currentEnemies(i).lastFrame = DateTime.Now
 					End If
@@ -1075,6 +1226,7 @@ Public Class GameManager
 
 	End Sub
 
+	' destroy the player, loose a life
 	Private Sub destroyVicViper()
 		vicViper.isDying = True
 		lives = lives - 1
@@ -1098,18 +1250,20 @@ Public Class GameManager
 	' updates all the UI elements
 	Private Sub updateUI()
 
-		' enemies
+		' enemies, enemy bullets
 		Dim enemiesToDestroy(-1) As Integer
 		For i = 0 To currentEnemies.Length - 1
 			If currentEnemies(i).shallSpawn Then
 				gw.gameField.Children.Add(currentEnemies(i).control)
 				currentEnemies(i).shallSpawn = False
 				currentEnemies(i).lastShootTime = DateTime.Now
-				If currentEnemies(i).type <> "dee01" Then
+				If currentEnemies(i).type <> "dee01" And currentEnemies(i).type <> "powerup" Then
 					currentEnemies(i).movementSpeed = currentEnemies(i).baseMovementSpeed * movementSpeedMultiplier
 				End If
-
 			ElseIf currentEnemies(i).shallDestroy Then
+				If currentEnemies(i).shallChirp Then
+					sm.playSoundEffect(SoundEffects.Collect)
+				End If
 				currentEnemies(i).resetState()
 				Array.Resize(enemiesToDestroy, enemiesToDestroy.Length + 1)
 				enemiesToDestroy(enemiesToDestroy.Length - 1) = i
@@ -1148,6 +1302,7 @@ Public Class GameManager
 		End If
 	End Sub
 
+	' update the positions of bullets
 	Private Sub updateBullets()
 		Dim toDestroy(-1) As Integer
 
@@ -1172,6 +1327,42 @@ Public Class GameManager
 		End If
 		gw.lblScore.Text = getScore().ToString("D7")
 
+		gw.pm_Speed.Source = makeNewBitmapImage("/Images/PM_Speed.png")
+		gw.pm_Laser.Source = makeNewBitmapImage("/Images/PM_Laser.png")
+		gw.pm_Shield.Source = makeNewBitmapImage("/Images/PM_Shield.png")
+		Select Case powerUpSelected
+			Case -1
+				Select Case vicViper.ammoType
+					Case AmmunitionType.Laser
+						gw.pm_Laser.Source = makeNewBitmapImage("/Images/PM_Blank.png")
+					Case AmmunitionType.Rapid
+						gw.pm_Shield.Source = makeNewBitmapImage("/Images/PM_Blank.png")
+				End Select
+			Case 0
+				gw.pm_Speed.Source = makeNewBitmapImage("/Images/PM_Speed_O.png")
+				Select Case vicViper.ammoType
+					Case AmmunitionType.Laser
+						gw.pm_Laser.Source = makeNewBitmapImage("/Images/PM_Blank.png")
+					Case AmmunitionType.Rapid
+						gw.pm_Shield.Source = makeNewBitmapImage("/Images/PM_Blank.png")
+				End Select
+			Case 1
+				gw.pm_Laser.Source = makeNewBitmapImage("/Images/PM_Laser_O.png")
+				Select Case vicViper.ammoType
+					Case AmmunitionType.Laser
+						gw.pm_Laser.Source = makeNewBitmapImage("/Images/PM_Blank_O.png")
+					Case AmmunitionType.Rapid
+						gw.pm_Shield.Source = makeNewBitmapImage("/Images/PM_Blank.png")
+				End Select
+			Case 2
+				gw.pm_Shield.Source = makeNewBitmapImage("/Images/PM_Shield_O.png")
+				Select Case vicViper.ammoType
+					Case AmmunitionType.Laser
+						gw.pm_Laser.Source = makeNewBitmapImage("/Images/PM_Blank.png")
+					Case AmmunitionType.Rapid
+						gw.pm_Shield.Source = makeNewBitmapImage("/Images/PM_Blank_O.png")
+				End Select
+		End Select
 	End Sub
 
 	' updates which BGM to use. also multiplies enemy movement speed!
@@ -1190,12 +1381,22 @@ Public Class GameManager
 
 #Region "Other routines"
 
+	' prepare an enemy for spawning
 	Private Sub prepareEnemy(ByVal enemy As Entity)
 		Array.Resize(currentEnemies, currentEnemies.Length + 1)
 		enemy.shallSpawn = True
 		currentEnemies(currentEnemies.Length - 1) = enemy
 	End Sub
 
+	' prepare a powerup for spawning
+	Private Sub preparePowerUp(ByVal position As Point)
+		Dim powerUp As PowerUp
+		powerUp = New PowerUp(position)
+		Array.Resize(currentEnemies, currentEnemies.Length + 1)
+		currentEnemies(currentEnemies.Length - 1) = powerUp
+	End Sub
+
+	' remove indexes from an array
 	Public Shared Sub removeFromArray(ByRef array As Array, ByVal indexesToRemove As Integer())
 		System.Array.Reverse(indexesToRemove)
 		For i = 0 To indexesToRemove.Length - 1
@@ -1234,8 +1435,11 @@ Public Class GameManager
 	End Function
 
 	'' helper to generate map of enemies
-	Public Shared Function generateEnemyMap(ByVal pixelArray As Byte(), ByVal dimensions As Size) As Entity(,)
+	Public Shared Function generateEnemyMap(ByVal pixelArray As Byte(), ByVal dimensions As Size, ByRef vicViper As VicViper) As Entity(,)
 		Dim enemyMap(dimensions.Height - 1, dimensions.Width - 1) As Entity
+
+		Dim formationCounter As Integer = 0
+		Dim formationNumber As Integer = 1
 
 		Dim row As Integer = 0
 		Dim column As Integer = 0
@@ -1249,7 +1453,9 @@ Public Class GameManager
 			Select Case colour.ToString()
 				Case "#FFFF0000"
 					toAdd = New Enemy_Fan(New Point((gameWidth * scaleFactor) + enemyBufferZone, row * 2 * scaleFactor))
-				Case "#FF00FF00"
+					toAdd.formationNumber = formationNumber
+					formationCounter = formationCounter + 1
+				Case ("#FF00FF00")
 					toAdd = New Enemy_Rugal(New Point((gameWidth * scaleFactor) + enemyBufferZone, row * 2 * scaleFactor))
 				Case "#FF0000FF"
 					toAdd = New Enemy_Garun(New Point((gameWidth * scaleFactor) + enemyBufferZone, row * 2 * scaleFactor), False)
@@ -1268,12 +1474,23 @@ Public Class GameManager
 				column = 0
 				row = row + 1
 			End If
+
+			If formationCounter = 4 Then
+				formationCounter = 0
+				formationNumber = formationNumber + 1
+			End If
+
+		Next i
+
+		ReDim vicViper.formationKills(formationNumber)
+
+		For i = 0 To vicViper.formationKills.Length - 1
+			vicViper.formationKills(i) = 0
 		Next i
 
 		Return enemyMap
 	End Function
 
 #End Region
-
 
 End Class
