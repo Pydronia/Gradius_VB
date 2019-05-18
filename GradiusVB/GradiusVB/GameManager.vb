@@ -44,10 +44,10 @@ Public Class SoundManager
 
 	Private Sub playSound(ByRef player As MediaPlayer, ByVal effect As SoundEffects)
 		player = New MediaPlayer()
-		Dim uri As New Uri("Sounds/death.wav", UriKind.Relative)
+		Dim uri As New Uri("Sounds/death.mp3", UriKind.Relative)
 		Select Case effect
 			Case SoundEffects.Death
-				uri = New Uri("Sounds/death.wav", UriKind.Relative)
+				uri = New Uri("Sounds/death.mp3", UriKind.Relative)
 			Case SoundEffects.GameOver
 				uri = New Uri("Sounds/gameOver.mp3", UriKind.Relative)
 			Case SoundEffects.Intro
@@ -55,15 +55,15 @@ Public Class SoundManager
 			Case SoundEffects.Volcano
 				uri = New Uri("Sounds/volcano.mp3", UriKind.Relative)
 			Case SoundEffects.Shoot
-				uri = New Uri("Sounds/shoot.wav", UriKind.Relative)
+				uri = New Uri("Sounds/shoot.mp3", UriKind.Relative)
 			Case SoundEffects.Kill
-				uri = New Uri("Sounds/kill.wav", UriKind.Relative)
+				uri = New Uri("Sounds/kill.mp3", UriKind.Relative)
 			Case SoundEffects.Collect
-				uri = New Uri("Sounds/power_up.wav", UriKind.Relative)
+				uri = New Uri("Sounds/power_up.mp3", UriKind.Relative)
 			Case SoundEffects.PowerUp
-				uri = New Uri("Sounds/select_power.wav", UriKind.Relative)
+				uri = New Uri("Sounds/select_power.mp3", UriKind.Relative)
 			Case SoundEffects.Start
-				uri = New Uri("Sounds/start.wav", UriKind.Relative)
+				uri = New Uri("Sounds/start.mp3", UriKind.Relative)
 		End Select
 		player.Open(uri)
 
