@@ -1003,7 +1003,7 @@ Public Class GameManager
 	End Sub
 
 	' check collisions with the terrain
-	Private Function checkTerrain(ByVal entity As Entity)
+	Private Function checkTerrain(ByVal entity As Entity) As Boolean
 		Dim collided As Boolean
 		collided = False
 		If Not entity.shallDestroy Then
