@@ -2,13 +2,18 @@
 
 	Private gm As GameManager
 
-	' Window Constructor
+	''' <summary>
+	''' Window Constructor
+	''' </summary>
+	''' <param name="gm">The instance of the GameManager</param>
 	Public Sub New(ByVal gm As GameManager)
 		InitializeComponent()
 		Me.gm = gm
 	End Sub
 
-	' Setup game window
+	''' <summary>
+	''' Setup game window
+	''' </summary>
 	Private Sub Window_Loaded(sender As System.Object, e As System.Windows.RoutedEventArgs) Handles MyBase.Loaded
 		gm.gw = Me
 		lblName.Text = gm.getName()
@@ -20,6 +25,9 @@
 
 #Region "KeyInputHandlers"
 
+	''' <summary>
+	''' Handle key input for gameplay. This is for detecting keyDown events
+	''' </summary>
 	Private Sub Window_KeyDown(sender As System.Object, e As System.Windows.Input.KeyEventArgs) Handles MyBase.KeyDown
 		If Not e.IsRepeat Then
 			If (e.Key = Key.Up Or e.Key = Key.Down Or e.Key = Key.Left Or e.Key = Key.Right) Then
@@ -32,6 +40,9 @@
 		End If
 	End Sub
 
+	''' <summary>
+	''' Handle key input for gameplay. This is for detecting keyUp Events
+	''' </summary>
 	Private Sub Window_KeyUp(sender As System.Object, e As System.Windows.Input.KeyEventArgs) Handles MyBase.KeyUp
 		If Not e.IsRepeat And (e.Key = Key.Up Or e.Key = Key.Down Or e.Key = Key.Left Or e.Key = Key.Right) Then
 			gm.setInputDirection(False, e.Key)

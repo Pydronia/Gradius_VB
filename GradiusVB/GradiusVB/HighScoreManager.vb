@@ -2,12 +2,18 @@
 
 Module HighScoreManager
 
-	' structure for storing initials with scores
+	''' <summary>
+	''' Structure for storing initials with scores
+	''' </summary>
 	Public Structure HighScore
 		Public score As Integer
 		Public initials As String
 
-		' constructor
+		''' <summary>
+		''' Constructor for HighScore Structure
+		''' </summary>
+		''' <param name="inScore">The score</param>
+		''' <param name="inInitials">The name for the score</param>
 		Public Sub New(ByVal inScore As Integer, ByVal inInitials As String)
 			score = inScore
 			initials = inInitials
@@ -17,7 +23,10 @@ Module HighScoreManager
 	Private directory As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create) & "\GradiusVB\"
 	Private fileName As String = "gradius-highscores.txt"
 
-	' Return the highest score. This is called at the start of every game and will handle the creation of a new file as well (if its not there)
+	''' <summary>
+	''' Return the highest score. This is called at the start of every game and will handle the creation of a new file as well (if its not there)
+	''' </summary>
+	''' <returns>The current highest score</returns>
 	Public Function getHighScore() As Integer
 		Dim score As Integer
 		If Not fileExists() Then
@@ -35,7 +44,10 @@ Module HighScoreManager
 		Return score
 	End Function
 
-	' grab and return all (sorted) highscores
+	''' <summary>
+	''' grab and return all (sorted) highscores
+	''' </summary>
+	''' <returns>An array of all high scores from the file</returns>
 	Public Function fetchHighScores() As HighScore()
 		Dim highScores(-1) As HighScore
 
@@ -57,7 +69,10 @@ Module HighScoreManager
 		Return highScores
 	End Function
 
-	' decending insertion sort (as the highscores will usually be very close to sorted)
+	''' <summary>
+	''' A decending insertion sort (as the highscores will usually be very close to sorted, insertion is well suited
+	''' </summary>
+	''' <param name="highScores">The array of highscores to sort</param>
 	Public Sub sortHighScores(ByRef highScores As HighScore())
 		Dim first As Integer = 0
 		Dim last As Integer = highScores.Length - 1
@@ -74,7 +89,10 @@ Module HighScoreManager
 		End While
 	End Sub
 
-	' write highscores to file
+	''' <summary>
+	''' Write highscores to file
+	''' </summary>
+	''' <param name="highScores">The array to write to disk</param>
 	Public Sub writeHighScores(ByVal highScores As HighScore())
 		Using sw As New StreamWriter(directory & fileName)
 			For i = 0 To highScores.Length - 1
@@ -83,12 +101,17 @@ Module HighScoreManager
 		End Using
 	End Sub
 
-	' Check if the file exists
+	''' <summary>
+	''' Check if the file exists
+	''' </summary>
+	''' <returns>Boolean, true if file exists</returns>
 	Private Function fileExists() As Boolean
 		Return File.Exists(directory & fileName)
 	End Function
 
-	' Create the file and/or directory.
+	''' <summary>
+	''' Create the file and/or directory.
+	''' </summary>
 	Private Sub createFile()
 		If Not System.IO.Directory.Exists(directory) Then
 			System.IO.Directory.CreateDirectory(directory)

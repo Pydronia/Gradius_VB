@@ -6,8 +6,10 @@
 
 #Region "EventHandlers"
 
-	' This event is for the initial input box, and blocks the user from inputting anything other than uppercase letters.
-	' This simplifies the name validation. It also handles the user pressing enter, and calls the checkStart method.
+	''' <summary>
+	''' This event is for the initial input box, and blocks the user from inputting anything other than uppercase letters.
+	''' This simplifies the name validation. It also handles the user pressing enter, and calls the checkStart method.
+	''' </summary>
 	Private Sub initialInput_KeyDown(sender As System.Object, e As System.Windows.Input.KeyEventArgs) Handles initialInput.KeyDown
 		If e.Key < Key.A Or e.Key > Key.Z Then
 			e.Handled = True
@@ -16,12 +18,17 @@
 		End If
 	End Sub
 
-	' This event begins the start process when the start button is clicked
+
+	''' <summary>
+	''' This event begins the start process when the start button is clicked
+	''' </summary>
 	Private Sub btnStart_Click(sender As System.Object, e As System.Windows.RoutedEventArgs) Handles btnStart.Click
 		checkStart()
 	End Sub
 
-	' toggle the sound setting
+	''' <summary>
+	''' Toggle the sound setting
+	''' </summary>
 	Private Sub btnSound_Click(sender As System.Object, e As System.Windows.RoutedEventArgs) Handles btnSound.Click
 		If soundSetting = False Then
 			soundSetting = True
@@ -32,7 +39,9 @@
 		End If
 	End Sub
 
-	' show the help screen!
+	''' <summary>
+	''' show the help screen!
+	''' </summary>
 	Private Sub btnHelp_Click(sender As System.Object, e As System.Windows.RoutedEventArgs) Handles btnHelp.Click
 		Dim helpWin As HelpWindow
 		helpWin = New HelpWindow()
@@ -41,7 +50,9 @@
 
 #End Region
 
-	' set the sound setting and initials to carry over from endgame
+	''' <summary>
+	''' set the sound setting and initials to carry over from endgame
+	''' </summary>
 	Private Sub Window_Loaded(sender As System.Object, e As System.Windows.RoutedEventArgs) Handles MyBase.Loaded
 		If soundSetting = False Then
 			btnSound.Content = "SOUND: OFF"
@@ -52,7 +63,11 @@
 		initialInput.Text = initials
 	End Sub
 
-	' Name validation, with user alert
+	''' <summary>
+	''' Name validation, with user alert
+	''' </summary>
+	''' <param name="name">The name to check</param>
+	''' <returns>Boolean, True if name is valid</returns>
 	Private Function isNameValid(ByVal name As String) As Boolean
 		Dim valid As Boolean = True
 		For i = 0 To name.Length - 1
@@ -70,7 +85,9 @@
 		Return (valid And (name.Length = 3))
 	End Function
 
-	' Method to start the initialization of the GameManager and hence the game
+	''' <summary>
+	''' Method to start the initialization of the GameManager and hence the game
+	''' </summary>
 	Private Sub checkStart()
 		If isNameValid(initialInput.Text) Then
 			' good to start!
@@ -85,7 +102,9 @@
 		End If
 	End Sub
 
-	' Switch the button lable back to normal after alert
+	''' <summary>
+	''' Switch the button lable back to normal after alert
+	''' </summary>
 	Private Sub timer_Tick(ByVal sender As Object, ByVal e As EventArgs)
 		btnStart.Content = "PLAYER 1 START"
 		btnStart.FontSize = 24
@@ -93,7 +112,9 @@
 		timer.Stop()
 	End Sub
 
-	' Start the game!
+	''' <summary>
+	''' Start the game!
+	''' </summary>
 	Private Sub startGame()
 		Dim gm As GameManager
 		gm = New GameManager(initialInput.Text, soundSetting)

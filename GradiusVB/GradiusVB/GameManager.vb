@@ -1,4 +1,6 @@
-﻿' Enum for different sounds
+﻿''' <summary>
+''' Enum for different sounds
+''' </summary>
 Public Enum SoundEffects
 	Death
 	GameOver
@@ -12,7 +14,9 @@ Public Enum SoundEffects
 	Start
 End Enum
 
-' Class to manage the playing of sound effects and background sounds.
+''' <summary>
+''' Class to manage the playing of sound effects and background sounds.
+''' </summary>
 Public Class SoundManager
 
 	Private Delegate Sub soundEffectDelegate(ByVal effect As SoundEffects)
@@ -30,6 +34,10 @@ Public Class SoundManager
 		currentMusic = SoundEffects.Intro
 	End Sub
 
+	''' <summary>
+	''' Play a specific sound
+	''' </summary>
+	''' <param name="effect">The sound effect to play</param>
 	Public Sub playSoundEffect(ByVal effect As SoundEffects)
 		Select Case effect
 			Case SoundEffects.Death, SoundEffects.GameOver, SoundEffects.Intro, SoundEffects.Volcano
@@ -42,6 +50,11 @@ Public Class SoundManager
 		End Select
 	End Sub
 
+	''' <summary>
+	''' Helper function to play sounds
+	''' </summary>
+	''' <param name="player">The MediaPlayer object to use</param>
+	''' <param name="effect">The effect to play</param>
 	Private Sub playSound(ByRef player As MediaPlayer, ByVal effect As SoundEffects)
 		player = New MediaPlayer()
 		Dim uri As New Uri("Sounds/death.mp3", UriKind.Relative)
@@ -76,7 +89,9 @@ Public Class SoundManager
 
 End Class
 
-' Structure to represent directions
+''' <summary>
+''' Class to manage the playing of sound effects and background sounds.
+''' </summary>
 Public Structure Directions
 	Public up As Boolean
 	Public down As Boolean
@@ -91,7 +106,9 @@ Public Structure Directions
 	End Operator
 End Structure
 
-' enum to represent what animation frame to display
+''' <summary>
+''' Enum to represent what animation frame to display
+''' </summary>
 Public Enum AnimationFrame
 	Neutral
 	Up
@@ -101,7 +118,9 @@ Public Enum AnimationFrame
 	Five
 End Enum
 
-' Class for storing the representation of maps and terrain
+''' <summary>
+''' Class for storing the representation of maps and terrain
+''' </summary>
 Public Class Map
 
 	Const mapMoveSpeed As Integer = 64
@@ -115,6 +134,13 @@ Public Class Map
 	Public position As Double
 	Public movementSpeed As Double
 
+	''' <summary>
+	''' Constructor for a new map
+	''' </summary>
+	''' <param name="control">The image of the map</param>
+	''' <param name="collisionImage">The image for the collision map</param>
+	''' <param name="enemyMapImage">The map image for the positions of enemies</param>
+	''' <param name="vicViper">The Vic Viper class</param>
 	Public Sub New(ByVal control As Image, ByVal collisionImage As BitmapImage, ByVal enemyMapImage As BitmapImage, ByRef vicViper As VicViper)
 		Me.control = control
 		Me.length = control.Width
@@ -146,6 +172,9 @@ Public Class Map
 
 	End Sub
 
+	''' <summary>
+	''' Update the map position
+	''' </summary>
 	Public Sub ui_updateMapPosition()
 		Canvas.SetLeft(control, position)
 	End Sub
@@ -153,7 +182,9 @@ Public Class Map
 End Class
 
 #Region "Entities"
-' Overall class for entities, including bullets, enemies, and the player
+''' <summary>
+''' Overall class for entities, including bullets, enemies, and the player
+''' </summary>
 Public Class Entity
 
 	Public movementDirection As Vector
@@ -192,6 +223,13 @@ Public Class Entity
 	Public type As String
 	Public control As Image
 
+	''' <summary>
+	''' Base constructor for an entity
+	''' </summary>
+	''' <param name="type">String tag to identify the type of entity</param>
+	''' <param name="control">The image to use for the entity</param>
+	''' <param name="position">The position of the entity</param>
+	''' <param name="movementSpeed">The movement speed modifier of the entitiy</param>
 	Public Sub New(ByVal type As String, ByVal control As Image, ByVal position As Point, ByVal movementSpeed As Double)
 		Me.type = type
 		Me.control = control
@@ -213,13 +251,17 @@ Public Class Entity
 		freeDirections.right = True
 	End Sub
 
-	' position update
+	''' <summary>
+	''' Updates the position of the entity
+	''' </summary>
 	Public Sub ui_updatePosition()
 		Canvas.SetLeft(control, position.X)
 		Canvas.SetTop(control, position.Y)
 	End Sub
 
-	' update what texture to show for this entity
+	''' <summary>
+	''' Update what texture (image) to show for this entity
+	''' </summary>
 	Public Sub ui_updateFrame()
 		If Me.isDying Then
 			If deathFrameNum >= deathAnimationFrames.Length Then
@@ -234,7 +276,11 @@ Public Class Entity
 		End If
 	End Sub
 
-	' apply the vector calculation to move the entity
+	''' <summary>
+	''' apply the vector calculation to move the entity
+	''' </summary>
+	''' <param name="delta">Time since last update</param>
+	''' <param name="vicViper">The vic viper object</param>
 	Public Overridable Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
 		Dim newPosition As Point
@@ -248,11 +294,19 @@ Public Class Entity
 		End If
 	End Sub
 
+	''' <summary>
+	''' Method stub for generating bullets
+	''' </summary>
+	''' <param name="gw">the game window</param>
+	''' <param name="sm">the sound manager</param>
+	''' <param name="gm">the game manager itself</param>
 	Public Overridable Sub generateBullet(ByRef gw As GameWindow, ByRef sm As SoundManager, ByRef gm As GameManager)
 
 	End Sub
 
-	' function to reset the entity state
+	''' <summary>
+	''' Function to reset the entity state
+	''' </summary>
 	Public Overridable Sub resetState()
 		Me.position = startingPosition
 		Me.shallDestroy = False
@@ -270,7 +324,9 @@ Public Class Entity
 
 End Class
 
-' class for enemy
+''' <summary>
+''' Class for enemy
+''' </summary>
 Public Class Enemy_Fan
 	Inherits Entity
 
@@ -280,6 +336,10 @@ Public Class Enemy_Fan
 	Private hasTurned As Boolean = False
 	Private hasStraightened As Boolean = False
 
+	''' <summary>
+	''' Constructor for an enemy Fan
+	''' </summary>
+	''' <param name="position">Starting position of enemy</param>
 	Sub New(ByVal position As Point)
 		MyBase.New("fan", GameManager.makeNewSprite("/Images/fan_1.png"), position, 256)
 		movementDirection = New Vector(-1, 0)
@@ -292,7 +352,11 @@ Public Class Enemy_Fan
 		lastFrame = DateTime.Now
 	End Sub
 
-	' movement for the fan enemy
+	''' <summary>
+	''' movement for the fan enemy
+	''' </summary>
+	''' <param name="delta">time since last update</param>
+	''' <param name="vicViper">The vic viper object</param>
 	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 		If position.X <= turnPosition And hasTurned = False Then
 			hasTurned = True
@@ -325,6 +389,9 @@ Public Class Enemy_Fan
 		End If
 	End Sub
 
+	''' <summary>
+	''' Reset the state of the enemy
+	''' </summary>
 	Public Overrides Sub resetState()
 		MyBase.resetState()
 		hasTurned = False
@@ -334,10 +401,16 @@ Public Class Enemy_Fan
 
 End Class
 
-' class for enemy
+''' <summary>
+''' Class for enemy
+''' </summary>
 Public Class Enemy_Rugal
 	Inherits Entity
 
+	''' <summary>
+	''' Constructor for enemy Rugal
+	''' </summary>
+	''' <param name="position">Starting position of enemy</param>
 	Sub New(ByVal position As Point)
 		MyBase.New("rugal", GameManager.makeNewSprite("/Images/rugal_1.png"), position, 256)
 		movementDirection = New Vector(-1, 0)
@@ -348,7 +421,11 @@ Public Class Enemy_Rugal
 		value = 100
 	End Sub
 
-	' movement for rugal enemy
+	''' <summary>
+	''' Movement for rugal enemy
+	''' </summary>
+	''' <param name="delta">Time since last update</param>
+	''' <param name="vicViper">Vic Viper object</param>
 	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 
 		If position.Y > vicViper.position.Y + 2 Then
@@ -377,12 +454,19 @@ Public Class Enemy_Rugal
 
 End Class
 
-' class for enemy
+''' <summary>
+''' class for enemy
+''' </summary>
 Public Class Enemy_Garun
 	Inherits Entity
 
 	Private baseLinePos As Double
 
+	''' <summary>
+	''' Constructor for enemy Garun
+	''' </summary>
+	''' <param name="position">Enemy starting position</param>
+	''' <param name="isRed">Boolean to determine if the enemy drops a power capsule</param>
 	Sub New(ByVal position As Point, ByVal isRed As Boolean)
 		MyBase.New("garun", GameManager.makeNewSprite("/Images/garun_1.png"), position, 256)
 		movementDirection = New Vector(-1, 0)
@@ -403,7 +487,11 @@ Public Class Enemy_Garun
 		lastFrame = DateTime.Now
 	End Sub
 
-	' movement for garun enemy (sine wave)
+	''' <summary>
+	''' Movement for garun enemy (follows sine wave as a function of its x position)
+	''' </summary>
+	''' <param name="delta">Time since last frame</param>
+	''' <param name="vicViper">Vic Viper object</param>
 	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 
 		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
@@ -423,7 +511,9 @@ Public Class Enemy_Garun
 
 End Class
 
-' class for enemy
+''' <summary>
+''' Class for enemy
+''' </summary>
 Public Class Enemy_Dee01
 	Inherits Entity
 
@@ -431,6 +521,11 @@ Public Class Enemy_Dee01
 	Const baseShootTime As Integer = 3500
 	Const shootTimeRange As Integer = 2000
 
+	''' <summary>
+	''' Constructor for enemy Dee-01
+	''' </summary>
+	''' <param name="position">Enemy starting position</param>
+	''' <param name="onRoof">Determines if the enemy is upside-down or not</param>
 	Sub New(ByVal position As Point, ByVal onRoof As Boolean)
 		MyBase.New("dee01", GameManager.makeNewSprite("/Images/dee01_1.png"), position, 64)
 		movementDirection = New Vector(-1, 0)
@@ -450,7 +545,11 @@ Public Class Enemy_Dee01
 		value = 100
 	End Sub
 
-	' movement (animation) for dee-01 enemy (turret)
+	''' <summary>
+	''' movement (animation) for dee-01 enemy (turret)
+	''' </summary>
+	''' <param name="delta">Time since last frame</param>
+	''' <param name="vicViper">Vic Viper object</param>
 	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 
 		Dim angle As Double
@@ -482,7 +581,11 @@ Public Class Enemy_Dee01
 		End If
 	End Sub
 
-	' helper function to get the angle to the player from the turret (anti-clockwise from the negative x axis)
+	''' <summary>
+	''' helper function to get the angle to the player from the turret (anti-clockwise from the negative x axis)
+	''' </summary>
+	''' <param name="vicViper">The vic viper object</param>
+	''' <returns>Angle to player</returns>
 	Private Function getAngleToPlayer(ByRef vicViper As VicViper) As Double
 		Dim angle As Double
 		If onRoof Then
@@ -497,11 +600,20 @@ Public Class Enemy_Dee01
 		Return angle
 	End Function
 
+	''' <summary>
+	''' Generates a random time to shoot
+	''' </summary>
+	''' <returns>A random time to shoot</returns>
 	Public Shared Function generateRandomShootTime()
 		Return baseShootTime + Int((shootTimeRange + 1) * Rnd() - shootTimeRange / 2)
 	End Function
 
-	' create the enemy bullet
+	''' <summary>
+	''' create the enemy bullet
+	''' </summary>
+	''' <param name="gw">The game window</param>
+	''' <param name="sm">The sound manager</param>
+	''' <param name="gm">The game manager</param>
 	Public Overrides Sub generateBullet(ByRef gw As GameWindow, ByRef sm As SoundManager, ByRef gm As GameManager)
 		If Not isDying Then
 			Dim bullet As Entity
@@ -523,10 +635,16 @@ Public Class Enemy_Dee01
 
 End Class
 
-' class for enemy
+''' <summary>
+''' Class for the power-up capsule
+''' </summary>
 Public Class PowerUp
 	Inherits Entity
 
+	''' <summary>
+	''' Constructor for the power-up capsule
+	''' </summary>
+	''' <param name="position">Power-up capsule start position</param>
 	Sub New(ByVal position As Point)
 		MyBase.New("powerup", GameManager.makeNewSprite("/Images/powerup_1.png"), position, 64)
 		movementDirection = New Vector(-1, 0)
@@ -538,6 +656,11 @@ Public Class PowerUp
 		shallSpawn = True
 	End Sub
 
+	''' <summary>
+	''' Moves the capsule
+	''' </summary>
+	''' <param name="delta">Time since last update</param>
+	''' <param name="vicViper">The vic viper object</param>
 	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 
 		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
@@ -552,20 +675,27 @@ Public Class PowerUp
 		End If
 	End Sub
 
+	''' <summary>
+	''' Resets the state of the power-up
+	''' </summary>
 	Public Overrides Sub resetState()
 		MyBase.resetState()
 	End Sub
 
 End Class
 
-' enum for different ammo types
+''' <summary>
+''' enum for different ammo types
+''' </summary>
 Public Enum AmmunitionType
 	Normal
 	Laser
 	Rapid
 End Enum
 
-' The class for the player entity
+''' <summary>
+''' The class for the player entity
+''' </summary>
 Public Class VicViper
 	Inherits Entity
 
@@ -585,6 +715,10 @@ Public Class VicViper
 
 	Public directionKeys As Directions
 
+	''' <summary>
+	''' Player constructor
+	''' </summary>
+	''' <param name="control">The image to use for the vic viper</param>
 	Public Sub New(ByVal control As Image)
 		MyBase.New("vic", control, New Point(startingPosX, startingPosY), startingSpeed)
 
@@ -595,6 +729,9 @@ Public Class VicViper
 		Me.deathAnimationDelay = vicDeathDelayTime
 	End Sub
 
+	''' <summary>
+	''' Reset the player state
+	''' </summary>
 	Public Overrides Sub resetState()
 		isDying = False
 		position = New Point(startingPosX, startingPosY)
@@ -605,7 +742,11 @@ Public Class VicViper
 		ammoType = AmmunitionType.Normal
 	End Sub
 
-	' handle movement
+	''' <summary>
+	''' Handle the movement of the Vic Viper
+	''' </summary>
+	''' <param name="delta">Time since last update</param>
+	''' <param name="vicViper">The vicViper itself</param>
 	Public Overrides Sub moveEntity(ByVal delta As TimeSpan, ByRef vicViper As VicViper)
 		Dim distance = (delta.TotalMilliseconds / 1000) * movementSpeed
 		Dim newPosition As Point
@@ -628,7 +769,10 @@ Public Class VicViper
 		hitBox.Y = position.Y
 	End Sub
 
-	' update the bullets
+	''' <summary>
+	''' Update the vic viper's bullets
+	''' </summary>
+	''' <param name="gw">The game window</param>
 	Public Sub ui_updateBullets(ByRef gw As GameWindow)
 		Dim toDestroy(-1) As Integer
 
@@ -645,7 +789,12 @@ Public Class VicViper
 
 	End Sub
 
-	' generate a bullet
+	''' <summary>
+	''' Generate a bullet - i.e., shoot!
+	''' </summary>
+	''' <param name="gw">Game window</param>
+	''' <param name="sm">sound manager</param>
+	''' <param name="gm">game manager</param>
 	Public Overrides Sub generateBullet(ByRef gw As GameWindow, ByRef sm As SoundManager, ByRef gm As GameManager)
 		If (currentBullets.Length < 2 Or ammoType = AmmunitionType.Rapid) And Not isDying Then
 			sm.playSoundEffect(SoundEffects.Shoot)
@@ -669,7 +818,9 @@ End Class
 
 #End Region
 
-' main class to handle game processing and logic flow
+''' <summary>
+''' Main class to handle game processing and logic flow
+''' </summary>
 Public Class GameManager
 
 	Public gw As GameWindow
@@ -728,29 +879,53 @@ Public Class GameManager
 
 #Region "Constructor/Getters"
 
-	' Instance Constructor
+	''' <summary>
+	''' Instance Constructor
+	''' </summary>
+	''' <param name="name">The name to use</param>
+	''' <param name="soundSetting">Whether or not to play sounds</param>
 	Public Sub New(ByVal name As String, ByVal soundSetting As Boolean)
 		Me.name = name
 		Me.soundSetting = soundSetting
 		preSetup()
 	End Sub
 
+	''' <summary>
+	''' Function to get the current name
+	''' </summary>
+	''' <returns>Current name</returns>
 	Public Function getName() As String
 		Return name
 	End Function
 
+	''' <summary>
+	''' Function to get the current lives
+	''' </summary>
+	''' <returns>Current lives</returns>
 	Public Function getLives() As Integer
 		Return lives
 	End Function
 
+	''' <summary>
+	''' Function to get the current score
+	''' </summary>
+	''' <returns>Current score</returns>
 	Public Function getScore() As Integer
 		Return score
 	End Function
 
+	''' <summary>
+	''' Function to get the current high score
+	''' </summary>
+	''' <returns>Current highs score</returns>
 	Public Function getHighScore() As Integer
 		Return highScore
 	End Function
 
+	''' <summary>
+	''' Function to get the current sound setting
+	''' </summary>
+	''' <returns>Current sound setting</returns>
 	Public Function getSoundSetting() As Boolean
 		Return soundSetting
 	End Function
@@ -759,7 +934,11 @@ Public Class GameManager
 
 #Region "Input Handling"
 
-	' Set the direction of the vic viper
+	''' <summary>
+	''' Set the direction of the vic viper
+	''' </summary>
+	''' <param name="press">If the event is a press or a release</param>
+	''' <param name="key">The key pressed</param>
 	Public Sub setInputDirection(ByVal press As Boolean, ByVal key As Key)
 		Select Case key
 			Case Input.Key.Up
@@ -775,12 +954,16 @@ Public Class GameManager
 		updateVicVector()
 	End Sub
 
-	' Signal to shoot!
+	''' <summary>
+	''' Signal to shoot!
+	''' </summary>
 	Public Sub prepareToShoot()
 		vicViper.shallShoot = True
 	End Sub
 
-	' apply a power-up
+	''' <summary>
+	''' apply a power-up
+	''' </summary>
 	Public Sub selectPowerUp()
 		If Not vicViper.isDying Then
 			Select Case powerUpSelected
@@ -800,7 +983,9 @@ Public Class GameManager
 
 #Region "Initialisation/Reset Routines"
 
-	' setup before game window created
+	''' <summary>
+	''' setup before game window is created
+	''' </summary>
 	Private Sub preSetup()
 		lives = 3
 		score = 0
@@ -808,7 +993,9 @@ Public Class GameManager
 		sm = New SoundManager(Me)
 	End Sub
 
-	' setup when game window created
+	''' <summary>
+	''' setup when game window is created
+	''' </summary>
 	Public Sub setup()
 		powerUpImages = New Image(2) {gw.pm_Speed, gw.pm_Laser, gw.pm_Shield}
 		powerUpSelected = -1
@@ -826,7 +1013,9 @@ Public Class GameManager
 		previousEnemyCheckPosition = -map.position + (gameWidth * scaleFactor) + enemyBufferZone
 	End Sub
 
-	' start the game loop!
+	''' <summary>
+	''' starts the game loop!
+	''' </summary>
 	Public Sub start()
 		sm.playSoundEffect(SoundEffects.Intro)
 		gameTimer = New Timers.Timer(1)
@@ -836,7 +1025,9 @@ Public Class GameManager
 
 	End Sub
 
-	' Reset for when you loose a life
+	''' <summary>
+	''' Reset for when you loose a life
+	''' </summary>
 	Private Sub reset()
 
 		For i = 0 To currentEnemies.Length - 1
@@ -871,7 +1062,9 @@ Public Class GameManager
 		sm.currentMusic = SoundEffects.Intro
 	End Sub
 
-	' close the window, display highscores.
+	''' <summary>
+	''' close the window, display highscores.
+	''' </summary>
 	Private Sub endGame()
 		sm.playSoundEffect(SoundEffects.GameOver)
 		Dim sw As ScoreWindow
@@ -883,7 +1076,11 @@ Public Class GameManager
 #End Region
 
 #Region "Main Game Loop"
-	' The game loop which runs once every ~15-16ms. This is the main line of the program. Due to the nature of timers it is not always exact, however it is inconsequential and managable.
+	''' <summary>
+	''' The game loop which runs once every ~15-16ms.
+	''' This is the main line of the program.
+	''' </summary>
+	''' <remarks>Due to the nature of timers it is not always an exact time, however it is inconsequential and managable.</remarks>
 	Private Sub gameLoop(send As Object, e As Timers.ElapsedEventArgs)
 		' delta time calculation (for accurate movement)
 		Dim currentTime As DateTime
@@ -912,8 +1109,11 @@ Public Class GameManager
 
 #Region "Processing Routines"
 
-	' Check the collisions for the vicviper/entities
-	Private Function checkCollisions()
+	''' <summary>
+	''' Check the collisions for the vicviper/entities
+	''' </summary>
+	''' <returns>If the player has died</returns>
+	Private Function checkCollisions() As Boolean
 
 		Dim hasDied As Boolean
 		hasDied = False
@@ -975,7 +1175,9 @@ Public Class GameManager
 		Return hasDied
 	End Function
 
-	' check the edges of the screen to prevent movement outside the game screen
+	''' <summary>
+	''' check the edges of the screen to prevent movement outside the game screen
+	''' </summary>
 	Private Sub checkBoundaries()
 		Dim previous As Directions
 		previous = vicViper.freeDirections
@@ -990,7 +1192,9 @@ Public Class GameManager
 		End If
 	End Sub
 
-	' check for collisions with powerups.
+	''' <summary>
+	''' check for collisions with powerups.
+	''' </summary>
 	Private Sub checkPowerUps()
 		For i = 0 To currentEnemies.Length - 1
 			If currentEnemies(i).type = "powerup" AndAlso vicViper.hitBox.IntersectsWith(currentEnemies(i).hitBox) Then
@@ -1002,7 +1206,11 @@ Public Class GameManager
 		Next i
 	End Sub
 
-	' check collisions with the terrain
+	''' <summary>
+	''' check collisions with the terrain
+	''' </summary>
+	''' <param name="entity">The entity to check</param>
+	''' <returns>If the entity has collided</returns>
 	Private Function checkTerrain(ByVal entity As Entity) As Boolean
 		Dim collided As Boolean
 		collided = False
@@ -1027,7 +1235,12 @@ Public Class GameManager
 		Return collided
 	End Function
 
-	' check any hits for a bullet
+	''' <summary>
+	''' check any hits for a bullet
+	''' </summary>
+	''' <param name="bullet">The bullet to check</param>
+	''' <param name="playerBullet">If the bullet being checked is a player bullet or an enemy bullet</param>
+	''' <returns>The entity which the bullet has collided with</returns>
 	Private Function checkHitsForBullet(ByRef bullet As Entity, ByVal playerBullet As Boolean) As Entity
 		Dim hitEnemy As Entity
 		hitEnemy = Nothing
@@ -1047,7 +1260,10 @@ Public Class GameManager
 		Return hitEnemy
 	End Function
 
-	' check for a player collision with the enemy
+	''' <summary>
+	''' Check for a player collision with the enemy
+	''' </summary>
+	''' <returns>Boolean, true if a hit</returns>
 	Private Function checkEnemyCollision() As Boolean
 		Dim hit As Boolean = False
 		For i = 0 To currentEnemies.Length - 1
@@ -1058,12 +1274,19 @@ Public Class GameManager
 		Return hit
 	End Function
 
-	' move the specified entity and update vicViper animation frame if applicable
+	''' <summary>
+	''' Move the specified entity and update vicViper animation frame if applicable
+	''' </summary>
+	''' <param name="entity">The entity to move</param>
+	''' <param name="delta">Time since last update</param>
 	Private Sub moveEntity(ByVal entity As Entity, ByVal delta As TimeSpan)
 		entity.moveEntity(delta, vicViper)
 	End Sub
 
-	' move all entities
+	''' <summary>
+	''' Move all entities
+	''' </summary>
+	''' <param name="delta">Time since last update</param>
 	Private Sub moveEntities(ByVal delta As TimeSpan)
 
 		' move enemies
@@ -1084,7 +1307,10 @@ Public Class GameManager
 		Next i
 	End Sub
 
-	' map scrolling
+	''' <summary>
+	''' Map scrolling
+	''' </summary>
+	''' <param name="delta">Time since last update</param>
 	Private Sub moveMap(ByVal delta As TimeSpan)
 		map.position = map.position - ((delta.TotalMilliseconds / 1000) * map.movementSpeed)
 
@@ -1117,7 +1343,9 @@ Public Class GameManager
 
 	End Sub
 
-	' update and check events which happen on a timed basis
+	''' <summary>
+	''' Update and check events which happen on a timed basis
+	''' </summary>
 	Private Sub updateTimedRoutines()
 		If Not vicViper.isDying Then
 			updateVicAnimationFrame()
@@ -1171,7 +1399,9 @@ Public Class GameManager
 
 	End Sub
 
-	' update the animation frame of the vic viper
+	''' <summary>
+	''' Update the animation frame of the vic viper
+	''' </summary>
 	Private Sub updateVicAnimationFrame()
 		If vicAnimationTicking And (DateTime.Now - vicAnimationDelayStart).TotalMilliseconds >= vicAnimationDelay Then
 			vicAnimationTicking = False
@@ -1183,7 +1413,9 @@ Public Class GameManager
 		End If
 	End Sub
 
-	' Update the vicViper's movement vector and start animation frame delay
+	''' <summary>
+	''' Update the vicViper's movement vector and start animation frame delay
+	''' </summary>
 	Private Sub updateVicVector()
 		Dim previous As Vector
 		previous = vicViper.movementDirection
@@ -1226,7 +1458,9 @@ Public Class GameManager
 
 	End Sub
 
-	' destroy the player, loose a life
+	''' <summary>
+	''' destroy the player, loose a life
+	''' </summary>
 	Private Sub destroyVicViper()
 		vicViper.isDying = True
 		lives = lives - 1
@@ -1247,7 +1481,10 @@ Public Class GameManager
 #End Region
 
 #Region "UI Update Routines"
-	' updates all the UI elements
+	''' <summary>
+	''' updates all the UI elements
+	''' </summary>
+	''' <remarks>This function runs on the main thread, and is invoked from the timer thread</remarks>
 	Private Sub updateUI()
 
 		' enemies, enemy bullets
@@ -1302,7 +1539,9 @@ Public Class GameManager
 		End If
 	End Sub
 
-	' update the positions of bullets
+	''' <summary>
+	''' update the positions of bullets
+	''' </summary>
 	Private Sub updateBullets()
 		Dim toDestroy(-1) As Integer
 
@@ -1318,7 +1557,9 @@ Public Class GameManager
 		GameManager.removeFromArray(currentBullets, toDestroy)
 	End Sub
 
-	' updates text elements
+	''' <summary>
+	''' updates text elements and the power-meter
+	''' </summary>
 	Private Sub updateInterface()
 		If lives >= 0 Then
 			gw.lblLives.Text = getLives()
@@ -1365,7 +1606,9 @@ Public Class GameManager
 		End Select
 	End Sub
 
-	' updates which BGM to use. also multiplies enemy movement speed!
+	''' <summary>
+	''' updates which BGM to use. also multiplies enemy movement speed!
+	''' </summary>
 	Private Sub updateBGM()
 		If sm.currentMusic = SoundEffects.Intro AndAlso Not vicViper.isDying AndAlso (map.position < -810 * scaleFactor And map.position > -820 * scaleFactor) Then
 			sm.currentMusic = SoundEffects.Volcano
@@ -1381,14 +1624,20 @@ Public Class GameManager
 
 #Region "Other routines"
 
-	' prepare an enemy for spawning
+	''' <summary>
+	''' prepare an enemy for spawning
+	''' </summary>
+	''' <param name="enemy">The enemy to prepare</param>
 	Private Sub prepareEnemy(ByVal enemy As Entity)
 		Array.Resize(currentEnemies, currentEnemies.Length + 1)
 		enemy.shallSpawn = True
 		currentEnemies(currentEnemies.Length - 1) = enemy
 	End Sub
 
-	' prepare a powerup for spawning
+	''' <summary>
+	''' prepare a powerup for spawning
+	''' </summary>
+	''' <param name="position">The position to spawn the power-up at</param>
 	Private Sub preparePowerUp(ByVal position As Point)
 		Dim powerUp As PowerUp
 		powerUp = New PowerUp(position)
@@ -1396,7 +1645,11 @@ Public Class GameManager
 		currentEnemies(currentEnemies.Length - 1) = powerUp
 	End Sub
 
-	' remove indexes from an array
+	''' <summary>
+	''' remove indexes from an array
+	''' </summary>
+	''' <param name="array">The array to modify</param>
+	''' <param name="indexesToRemove">The indexes to remove</param>
 	Public Shared Sub removeFromArray(ByRef array As Array, ByVal indexesToRemove As Integer())
 		System.Array.Reverse(indexesToRemove)
 		For i = 0 To indexesToRemove.Length - 1
@@ -1409,7 +1662,11 @@ Public Class GameManager
 		Next i
 	End Sub
 
-	' helper function to make a new sprite 
+	''' <summary>
+	''' helper function to make a new sprite 
+	''' </summary>
+	''' <param name="source">The source of the image to use</param>
+	''' <returns>A new image control</returns>
 	Public Shared Function makeNewSprite(ByVal source As String) As Image
 		Dim newControl As New Image()
 		Dim newBitmap As BitmapImage
@@ -1420,13 +1677,21 @@ Public Class GameManager
 		Return newControl
 	End Function
 
-	' helper function to make new image for sprite
+	''' <summary>
+	''' helper function to make new image for sprite
+	''' </summary>
+	''' <param name="source">The source of the image to generate</param>
+	''' <returns>A new bitmap image</returns>
 	Public Shared Function makeNewBitmapImage(ByVal source As String) As BitmapImage
 		Dim newBitmap As New BitmapImage(New Uri("pack://application:,,," & source))
 		Return newBitmap
 	End Function
 
-	' helper to generate byte array from bitmap
+	''' <summary>
+	''' helper to generate byte array from bitmap
+	''' </summary>
+	''' <param name="collisionImage">The terrain image for collisions</param>
+	''' <returns>Array of bytes in an image</returns>
 	Public Shared Function getPixelData(ByVal collisionImage As BitmapImage) As Byte()
 		Dim stride As Integer = collisionImage.PixelWidth * collisionImage.Format.BitsPerPixel / 8
 		Dim pixelArray((collisionImage.PixelHeight * stride) - 1) As Byte
@@ -1434,7 +1699,13 @@ Public Class GameManager
 		Return pixelArray
 	End Function
 
-	'' helper to generate map of enemies
+	''' <summary>
+	''' Helper to generate map of enemies
+	''' </summary>
+	''' <param name="pixelArray">The array of pixels from the image</param>
+	''' <param name="dimensions">The dimensions of the image</param>
+	''' <param name="vicViper">The vic viper object</param>
+	''' <returns>An array of enemies</returns>
 	Public Shared Function generateEnemyMap(ByVal pixelArray As Byte(), ByVal dimensions As Size, ByRef vicViper As VicViper) As Entity(,)
 		Dim enemyMap(dimensions.Height - 1, dimensions.Width - 1) As Entity
 
