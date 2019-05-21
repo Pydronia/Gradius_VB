@@ -94,7 +94,7 @@ Public Class SoundManager
 End Class
 
 ''' <summary>
-''' Class to manage the playing of sound effects and background sounds.
+''' Structure to represent different directions
 ''' </summary>
 Public Structure Directions
 	Public up As Boolean
