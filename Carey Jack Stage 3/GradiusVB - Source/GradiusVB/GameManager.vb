@@ -29,6 +29,10 @@ Public Class SoundManager
 
 	Private gm As GameManager
 
+	''' <summary>
+	''' Sound Manager Constructor
+	''' </summary>
+	''' <param name="gm">The Game Manager</param>
 	Public Sub New(ByVal gm As GameManager)
 		Me.gm = gm
 		currentMusic = SoundEffects.Intro
@@ -1081,7 +1085,7 @@ Public Class GameManager
 	''' This is the main line of the program.
 	''' </summary>
 	''' <remarks>Due to the nature of timers it is not always an exact time, however it is inconsequential and managable.</remarks>
-	Private Sub gameLoop(send As Object, e As Timers.ElapsedEventArgs)
+	Private Sub gameLoop(ByVal send As Object, ByVal e As Timers.ElapsedEventArgs)
 		' delta time calculation (for accurate movement)
 		Dim currentTime As DateTime
 		currentTime = DateTime.Now

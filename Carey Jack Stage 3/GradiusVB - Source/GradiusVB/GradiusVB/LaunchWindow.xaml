@@ -1,0 +1,34 @@
+﻿<Window x:Class="LaunchWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	Title="Gradius: VB"
+	ResizeMode="CanMinimize" WindowStartupLocation="CenterScreen" SizeToContent="WidthAndHeight"
+	Background="Black" Foreground="White"
+	UseLayoutRounding="True" Icon="/Images/Icon.ico">
+	<Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="672" Height="480">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="1*"/>
+			<ColumnDefinition Width="2*"/>
+			<ColumnDefinition Width="1*"/>
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="2*"/>
+			<RowDefinition Height="0.75*"/>
+			<RowDefinition Height="1*"/>
+			<RowDefinition Height="1.25*"/>
+		</Grid.RowDefinitions>
+
+		<Image Grid.ColumnSpan="3" Name="imgLogo" HorizontalAlignment="Center" VerticalAlignment="Center" Source="/Images/Title_Logo.png" RenderOptions.BitmapScalingMode="NearestNeighbor" />
+		
+		<TextBlock Grid.Row="1" Grid.ColumnSpan="3" Name="txtPrompt" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" Style="{StaticResource ArcadeText}" FontSize="18">
+			PLEASE ENTER YOUR INITIALS
+		</TextBlock>
+
+		<Button Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="30,25" FontSize="14" Name="btnHelp" Content="HELP" />
+		<TextBox Grid.Row="2" Grid.Column="1" Name="initialInput" CharacterCasing="Upper" MaxLength="3" FontSize="32" Margin="30,10"/>
+		<Button Grid.Row="2" Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="20,25" FontSize="12" Name="btnSound" Content="SOUND: OFF" />
+
+		<Button Style="{StaticResource bigBtn}" Grid.Row="3" Grid.ColumnSpan="3" Name="btnStart" FontSize="24" Content="PLAYER 1 START" Margin="140,25" />
+		
+	</Grid>
+</Window>
