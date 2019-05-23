@@ -14,7 +14,8 @@
 	''' <summary>
 	''' Get scores, determine if the current score is a high score, display scores (after adding current score), and then store the new highscores array.
 	''' </summary>
-	Private Sub Window_Loaded(sender As System.Object, e As System.Windows.RoutedEventArgs) Handles MyBase.Loaded
+	Private Sub Window_Loaded(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles MyBase.Loaded
+		' Get scores, determine if it's a high score.
 		Dim highScores As HighScore()
 		highScores = HighScoreManager.fetchHighScores()
 		If highScores.Length = 0 Then
@@ -22,12 +23,13 @@
 		ElseIf gm.getScore() > highScores(0).score Then
 			lblHiGet.Visibility = Windows.Visibility.Visible
 		End If
-		
 
+		' Add the current score to the high scores.
 		Array.Resize(highScores, highScores.Length + 1)
 		highScores(highScores.Length - 1) = New HighScore(gm.getScore(), gm.getName())
 		HighScoreManager.sortHighScores(highScores)
 
+		' actually show the high scores, and write to the file.
 		displayHighScores(highScores)
 		HighScoreManager.writeHighScores(highScores)
 	End Sub
@@ -48,6 +50,7 @@
 	Private Sub btnAgain_Click(sender As System.Object, e As System.Windows.RoutedEventArgs) Handles btnAgain.Click
 		Dim lw As LaunchWindow
 		lw = New LaunchWindow()
+		' pass settings through for consistency/persistence.
 		lw.initials = gm.getName()
 		lw.soundSetting = gm.getSoundSetting()
 		lw.Show()

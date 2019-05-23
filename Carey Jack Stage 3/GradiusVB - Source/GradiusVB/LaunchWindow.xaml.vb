@@ -53,7 +53,8 @@
 	''' <summary>
 	''' set the sound setting and initials to carry over from endgame
 	''' </summary>
-	Private Sub Window_Loaded(sender As System.Object, e As System.Windows.RoutedEventArgs) Handles MyBase.Loaded
+	Private Sub Window_Loaded(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles MyBase.Loaded
+		' Carry over from the last game, setting sound and initials.
 		If soundSetting = False Then
 			btnSound.Content = "SOUND: OFF"
 		Else
@@ -71,13 +72,17 @@
 	Private Function isNameValid(ByVal name As String) As Boolean
 		Dim valid As Boolean = True
 		For i = 0 To name.Length - 1
+			' Ensure character is a capital letter.
 			If Asc(name(i)) < Asc("A") Or Asc(name(i)) > Asc("Z") Then
 				valid = False
 			End If
 		Next i
 		If Not valid Then
 			btnStart.Content = "USE ONLY UPPERCASE LETTERS"
+			btnStart.FontSize = 18
+			btnStart.IsEnabled = False
 		ElseIf name.Length <> 3 Then
+			' make sure it's three letters long
 			btnStart.FontSize = 18
 			btnStart.Content = "ENTER THREE LETTERS"
 			btnStart.IsEnabled = False
@@ -93,7 +98,7 @@
 			' good to start!
 			startGame()
 		Else
-			' invalid! clear the textbox
+			' invalid! clear the textbox.
 			initialInput.Text = ""
 			timer = New System.Windows.Threading.DispatcherTimer()
 			AddHandler timer.Tick, AddressOf timer_Tick
@@ -103,9 +108,10 @@
 	End Sub
 
 	''' <summary>
-	''' Switch the button lable back to normal after alert
+	''' Switch the button label back to normal after alert
 	''' </summary>
 	Private Sub timer_Tick(ByVal sender As Object, ByVal e As EventArgs)
+		' Reset the button text back to normal
 		btnStart.Content = "PLAYER 1 START"
 		btnStart.FontSize = 24
 		btnStart.IsEnabled = True
@@ -116,6 +122,7 @@
 	''' Start the game!
 	''' </summary>
 	Private Sub startGame()
+		' make the game manager, game window, and show the next window.
 		Dim gm As GameManager
 		gm = New GameManager(initialInput.Text, soundSetting)
 		Dim gw As GameWindow

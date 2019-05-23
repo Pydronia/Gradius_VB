@@ -16,6 +16,7 @@
 	''' </summary>
 	Private Sub Window_Loaded(sender As System.Object, e As System.Windows.RoutedEventArgs) Handles MyBase.Loaded
 		gm.gw = Me
+		' Add text into labels on the form
 		lblName.Text = gm.getName()
 		lblLives.Text = gm.getLives()
 		lblHi.Text = gm.getHighScore().ToString("D7")
@@ -31,10 +32,13 @@
 	Private Sub Window_KeyDown(sender As System.Object, e As System.Windows.Input.KeyEventArgs) Handles MyBase.KeyDown
 		If Not e.IsRepeat Then
 			If (e.Key = Key.Up Or e.Key = Key.Down Or e.Key = Key.Left Or e.Key = Key.Right) Then
+				' movement
 				gm.setInputDirection(True, e.Key)
 			ElseIf e.Key = Key.A Then
+				' shooting
 				gm.prepareToShoot()
 			ElseIf e.Key = Key.S Then
+				' power ups
 				gm.selectPowerUp()
 			End If
 		End If
@@ -45,6 +49,7 @@
 	''' </summary>
 	Private Sub Window_KeyUp(sender As System.Object, e As System.Windows.Input.KeyEventArgs) Handles MyBase.KeyUp
 		If Not e.IsRepeat And (e.Key = Key.Up Or e.Key = Key.Down Or e.Key = Key.Left Or e.Key = Key.Right) Then
+			' stop movement
 			gm.setInputDirection(False, e.Key)
 		End If
 	End Sub

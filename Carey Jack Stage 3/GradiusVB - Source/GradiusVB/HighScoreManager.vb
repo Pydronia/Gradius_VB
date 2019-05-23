@@ -29,10 +29,12 @@ Module HighScoreManager
 	''' <returns>The current highest score</returns>
 	Public Function getHighScore() As Integer
 		Dim score As Integer
+		' check if the file exists
 		If Not fileExists() Then
 			createFile()
 			score = 0
 		Else
+			' It does; get them.
 			Dim scores As HighScore()
 			scores = fetchHighScores()
 			If scores.Length = 0 Then
@@ -51,11 +53,13 @@ Module HighScoreManager
 	Public Function fetchHighScores() As HighScore()
 		Dim highScores(-1) As HighScore
 
+		' Read the file.
 		Using sr As New StreamReader(directory & fileName)
 			While Not sr.EndOfStream
 				Dim line As String
 				line = sr.ReadLine()
 				If line <> "" Then
+					' split each line up into the score and the name.
 					Dim stringSplit As String()
 					stringSplit = line.Split(":")
 
@@ -65,6 +69,7 @@ Module HighScoreManager
 			End While
 		End Using
 
+		' sort them before returning them
 		sortHighScores(highScores)
 		Return highScores
 	End Function
@@ -74,6 +79,7 @@ Module HighScoreManager
 	''' </summary>
 	''' <param name="highScores">The array of highscores to sort</param>
 	Public Sub sortHighScores(ByRef highScores As HighScore())
+		' standard algorithm
 		Dim first As Integer = 0
 		Dim last As Integer = highScores.Length - 1
 		Dim positionOfNext As Integer = last - 1
@@ -95,6 +101,7 @@ Module HighScoreManager
 	''' <param name="highScores">The array to write to disk</param>
 	Public Sub writeHighScores(ByVal highScores As HighScore())
 		Using sw As New StreamWriter(directory & fileName)
+			' write line by line.
 			For i = 0 To highScores.Length - 1
 				sw.WriteLine(highScores(i).initials & ":" & CStr(highScores(i).score))
 			Next i
@@ -113,6 +120,7 @@ Module HighScoreManager
 	''' Create the file and/or directory.
 	''' </summary>
 	Private Sub createFile()
+		' NOTE: these methods may be different in regular Windows Forms.
 		If Not System.IO.Directory.Exists(directory) Then
 			System.IO.Directory.CreateDirectory(directory)
 		End If
